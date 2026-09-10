@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School - Test</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --success: #22c55e;
+            --success-bg: #f0fdf4;
+            --error: #ef4444;
+            --error-bg: #fef2f2;
+            --border-radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        #timer {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #timer.warning {
+            background: var(--error);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        main {
+            max-width: 800px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            flex: 1;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            min-width: 44px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .progress-container {
+            background: #e5e7eb;
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            background: var(--primary-gradient);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Intro & Screens */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Exercises */
+        .question-box {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .question-box:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .question-text {
+            font-weight: 500;
+            margin-bottom: 0.75srem;
+            margin-bottom: 10px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .option-label:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .option-label input {
+            accent-color: #667eea;
+        }
+
+        /* Lock Screen */
+        #lock-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        #lock-screen.active {
+            display: flex;
+        }
+
+        /* Teacher Modal */
+        #teacher-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Results & Review */
+        .result-card {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+        }
+
+        .result-score {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .review-item {
+            background: white;
+            border-radius: 9px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #d1d5db;
+        }
+
+        .review-item.correct { border-left-color: var(--success); background: var(--success-bg); }
+        .review-item.incorrect { border-left-color: var(--error); background: var(--error-bg); }
+
+        .hidden { display: none !important; }
+        
+        /* Secret trigger styling */
+        #secret-trigger {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            opacity: 0.05;
+            cursor: default;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <header id="main-header" class="hidden">
+        <h1 id="header-title">School</h1>
+        <div class="header-info">
+            <span id="header-user"></span>
+            <div id="timer">15:00</div>
+            <button class="btn" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" id="teacher-toggle-btn" onclick="toggleTeacherMode()">Učitelský mód</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- INTRO SCREEN -->
+        <div id="screen-intro" class="screen active">
+            <div class="card">
+                <h2 style="margin-bottom: 1rem;" id="intro-title">School</h2>
+                <p style="margin-bottom: 1.5rem; color: var(--text-light);" id="intro-pokyny"></p>
+                
+                <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 9px; margin-bottom: 1.5rem; color: #991b1b; font-size: 0.9rem;">
+                    <strong>⚠️ Pravidla testu:</strong> Test je přísně monitorován. Přepnutí záložky, okna nebo jakýkoliv pokus o opuštění testu vede k okamžitému uzamčení! Zákaz používání externích zdrojů.
+                </div>
+
+                <div class="form-group">
+                    <label for="student-name">Vaše jméno a příjmení (min. 3 znaky):</label>
+                    <input type="text" id="student-name" class="form-control" placeholder="např. Jan Novák" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label>Režim obrazovky:</label>
+                    <button type="button" class="btn" id="fs-btn" onclick="toggleFullScreen()" style="width: 100%; background: #4b5563;">🔲 Zapnout Fullscreen</button>
+                </div>
+
+                <button type="button" class="btn" id="start-btn" onclick="startTest()" style="width: 100%;" disabled>Spustit test</button>
+            </div>
+        </div>
+
+        <!-- TEST SCREEN -->
+        <div id="screen-test" class="screen">
+            <div class="progress-container">
+                <div class="progress-bar" id="test-progress"></div>
+            </div>
+            
+            <form id="test-form" onsubmit="event.preventDefault(); submitTest();">
+                <div id="exercises-container"></div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Odevzdat test</button>
+            </form>
+        </div>
+
+        <!-- RESULTS SCREEN -->
+        <div id="screen-results" class="screen">
+            <div class="result-card">
+                <h2>Výsledek testu</h2>
+                <div class="result-score" id="res-score-text">0 / 15</div>
+                <p id="res-percentage">0 %</p>
+                <h3 id="res-grade" style="margin-top: 0.5rem;">Známka: -</h3>
+            </div>
+
+            <div class="card">
+                <h3>Ověření výsledku</h3>
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Ověřovací kód a detaily pro vyučujícího:</p>
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center; margin-bottom: 1rem;">
+                    <div id="qr-container" style="background: white; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <p style="font-family: monospace; font-size: 0.8rem; word-break: break-all; background: #f3f4f6; padding: 8px; border-radius: 6px;" id="fallback-string"></p>
+                        <button class="btn" style="margin-top: 8px; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="copyFallback()">Kopírovat údaje</button>
+                    </div>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--error);" id="deadline-info"></p>
+                <p style="font-size: 0.8rem; margin-top: 0.5rem;"><strong>Instrukce:</strong> Pošli celý screenshot výsledkové karty bez ořezu a úprav nejpozději do uvedeného limitu.</p>
+            </div>
+
+            <div class="card">
+                <h3>Rozbor odpovědí</h3>
+                <div id="review-container" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- LOCK SCREEN -->
+    <div id="lock-screen">
+        <div style="max-width: 400px;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🔒</div>
+            <h2>Test byl uzamčen</h2>
+            <p style="color: var(--text-light); margin: 1rem 0;">Došlo k porušení pravidel (opuštění okna / záložky). Kontaktujte učitele.</p>
+            <div id="unlock-container" class="hidden" style="margin-top: 1.5rem;">
+                <input type="password" id="unlock-password" class="form-control" placeholder="Zadejte odemykací heslo" style="margin-bottom: 0.5rem;">
+                <button class="btn" onclick="tryUnlock()" style="width: 100%;">Odemknout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEACHER MODAL -->
+    <div id="teacher-modal">
+        <div class="modal-content">
+            <h3>Učitelský mód</h3>
+            <div style="margin: 1rem 0;" id="teacher-auth-section">
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.5rem;">Pro přístup zadejte jméno učitele a PIN.</p>
+                <input type="text" id="t-name" class="form-control" placeholder="Jméno učitele" style="margin-bottom: 0.5rem;">
+                <input type="password" id="t-pin" class="form-control" placeholder="PIN" style="margin-bottom: 0.5rem;">
+                <button class="btn" onclick="authTeacher()" style="width: 100%;">Přihlásit</button>
+            </div>
+            <div id="teacher-panel" class="hidden">
+                <hr style="margin: 1rem 0; border:0; border-top:1px solid #eee;">
+                <h4>Ověřit výsledek studenta</h4>
+                <textarea id="verify-input" class="form-control" placeholder="Vložte ověřovací řetězec..." style="margin: 0.5rem 0; height: 80px; font-size: 0.8rem;"></textarea>
+                <button class="btn" onclick="verifyPayload()" style="width: 100%; margin-bottom: 1rem;">Ověřit hash</button>
+                <div id="verify-result" style="font-size: 0.9rem; padding: 0.5rem; border-radius: 6px;"></div>
+                <button class="btn" onclick="toggleTeacherMode()" style="width: 100%; background: #6b7280; margin-top: 1rem;">Zavřít</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="secret-trigger" title="Unlock"></div>
+
+    <script>
+        const TEST_DATA = {
+ "nazev": "School",
+ "pokyny": "Vyplňte následující cvičení zaměřená na školní slovní zásobu. Test obsahuje 3 cvičení a celkem 15 bodů. Na vypracování máte 15 minut.",
+ "cviceni": [
+  {
+   "id": "c1",
+   "nadpis": "Multiple Choice: School Vocabulary",
+   "zadani": "Vyberte nejvhodnější možnost do následujících vět.",
+   "typ": "choice",
+   "otazky": [
+    {
+     "id": "c1q1",
+     "text": "If you don't know the meaning of a word, you should look it up in a ___.",
+     "moznosti": [
+      "timetable",
+      "dictionary",
+      "rubber",
+      "blackboard"
+     ],
+     "spravne": "dictionary",
+     "body": 1,
+     "vysvetleni": "Slovník (dictionary) slouží k vyhledávání významu neznámých slov."
+    },
+    {
+     "id": "c1q2",
+     "text": "Our geography teacher drew a big ___ of the world on the wall.",
+     "moznosti": [
+      "map",
+      "desk",
+      "pen",
+      "uniform"
+     ],
+     "spravne": "map",
+     "body": 1,
+     "vysvetleni": "V zeměpisu se běžně pracuje s mapou (map)."
+    },
+    {
+     "id": "c1q3",
+     "text": "At our school, all students have to wear a dark blue ___.",
+     "moznosti": [
+      "subject",
+      "uniform",
+      "term",
+      "break"
+     ],
+     "spravne": "uniform",
+     "body": 1,
+     "vysvetleni": "Školní uniforma (uniform) je povinné oblečení v některých školách."
+    },
+    {
+     "id": "c1q4",
+     "text": "You can clean the whiteboard with a special ___.",
+     "moznosti": [
+      "ruler",
+      "eraser",
+      "pencil case",
+      "scissors"
+     ],
+     "spravne": "eraser",
+     "body": 1,
+     "vysvetleni": "Na mazání tabule slouží houba nebo guma (eraser)."
+    },
+    {
+     "id": "c1q5",
+     "text": "The school year is divided into three ___.",
+     "moznosti": [
+      "terms",
+      "grades",
+      "exams",
+      "classrooms"
+     ],
+     "spravne": "terms",
+     "body": 1,
+     "vysvetleni": "Školní rok se v anglosaském prostředí často dělí na tři období neboli čtvrtletí/semestry (terms)."
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "nadpis": "Fill-in-the-Blank",
+   "zadani": "Doplňte do vět správné slovo ze školního prostředí podle kontextu.",
+   "typ": "gap",
+   "otazky": [
+    {
+     "id": "c2q1",
+     "text": "We have a short 15-minute ___ between lessons to rest and get a snack.",
+     "spravne": "break",
+     "tolerance": [
+      "recess"
+     ],
+     "body": 1,
+     "vysvetleni": "Přestávka mezi vyučovacími hodinami se řekne break nebo recess."
+    },
+    {
+     "id": "c2q2",
+     "text": "At the end of the year, we write a big final ___ to test everything we've learned.",
+     "spravne": "exam",
+     "tolerance": [
+      "test",
+      "examination"
+     ],
+     "body": 1,
+     "vysvetleni": "Závěrečná zkouška nebo test se označuje jako exam."
+    },
+    {
+     "id": "c2q3",
+     "text": "I keep all my pens, pencils and a rubber inside my pencil ___.",
+     "spravne": "case",
+     "tolerance": [
+      "box"
+     ],
+     "body": 1,
+     "vysvetleni": "Pouzdro na tužky se anglicky řekne pencil case."
+    },
+    {
+     "id": "c2q4",
+     "text": "My favourite ___ at school is history because I love learning about the past.",
+     "spravne": "subject",
+     "tolerance": [
+      "lesson"
+     ],
+     "body": 1,
+     "vysvetleni": "Školní předmět se vyjadřuje slovem subject."
+    },
+    {
+     "id": "c2q5",
+     "text": "The teacher wrote the homework on the ___ at the front of the classroom.",
+     "spravne": "board",
+     "tolerance": [
+      "blackboard",
+      "whiteboard"
+     ],
+     "body": 1,
+     "vysvetleni": "Tabule ve třídě se nazývá board, blackboard nebo whiteboard."
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "nadpis": "Matching School Items & Definitions",
+   "zadani": "Přiřaďte správný pojem k jeho popisu (zapište přesný anglický výraz).",
+   "typ": "matching",
+   "otazky": [
+    {
+     "id": "c3q1",
+     "text": "A book that gives instructions and information about a specific subject for students: ___",
+     "spravne": "textbook",
+     "tolerance": [
+      "book"
+     ],
+     "body": 1,
+     "vysvetleni": "Učebnice pro studenty se nazývá textbook."
+    },
+    {
+     "id": "c3q2",
+     "text": "A room where students do experiments in chemistry, physics or biology: ___",
+     "spravne": "laboratory",
+     "tolerance": [
+      "lab"
+     ],
+     "body": 1,
+     "vysvetleni": "Odborná učebna pro pokusy je laboratoř (laboratory nebo lab)."
+    },
+    {
+     "id": "c3q3",
+     "text": "A piece of furniture with a flat top where students sit and write during lessons: ___",
+     "spravne": "desk",
+     "tolerance": [
+      "table"
+     ],
+     "body": 1,
+     "vysvetleni": "Školní lavice nebo stůl pro studenta je desk."
+    },
+    {
+     "id": "c3q4",
+     "text": "A schedule that shows the times and days of school lessons: ___",
+     "spravne": "timetable",
+     "tolerance": [
+      "schedule"
+     ],
+     "body": 1,
+     "vysvetleni": "Rozvrh hodin se řekne timetable (BrE) nebo schedule (AmE)."
+    },
+    {
+     "id": "c3q5",
+     "text": "A person who is studying at a school or university: ___",
+     "spravne": "student",
+     "tolerance": [
+      "pupil",
+      "schoolboy",
+      "schoolgirl"
+     ],
+     "body": 1,
+     "vysvetleni": "Osoba navštěvující školu je student nebo pupil."
+    }
+   ]
+  }
+ ]
+};
+
+        const VERIFY_SECRET = "SCHOOL_TEST_SECRET_9988";
+        let state = {
+            testId: 'XK-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            studentName: '',
+            startTime: null,
+            endTime: null,
+            answers: {},
+            locked: false,
+            timerInterval: null,
+            timeLeft: 15 * 60
+        };
+
+        // Initialize UI
+        document.getElementById('intro-title').innerText = TEST_DATA.nazev;
+        document.getElementById('intro-pokyny').innerText = TEST_DATA.pokyny;
+        document.getElementById('header-title').innerText = TEST_DATA.nazev;
+
+        const nameInput = document.getElementById('student-name');
+        const startBtn = document.getElementById('start-btn');
+
+        nameInput.addEventListener('input', () => {
+            if(nameInput.value.trim().length >= 3) {
+                startBtn.removeAttribute('disabled');
+            } else {
+                startBtn.setAttribute('disabled', 'true');
+            }
+        });
+
+        // Build Exercises HTML
+        function buildExercises() {
+            const container = document.getElementById('exercises-container');
+            let html = '';
+            
+            TEST_DATA.cviceni.forEach((cv, idx) => {
+                html += `<div class="card">
+                    <h3>${idx + 1}. ${cv.nadpis}</h3>
+                    <p style="color: var(--text-light); margin-bottom: 1rem; font-size: 0.9rem;">${cv.zadani}</p>`;
+                
+                cv.otazky.forEach(ot => {
+                    html += `<div class="question-box" data-qid="${ot.id}">
+                        <div class="question-text">${ot.text}</div>`;
+                    
+                    if(cv.typ === 'choice') {
+                        html += `<div class="options-list">`;
+                        ot.moznosti.forEach(moz => {
+                            html += `<label class="option-label">
+                                <input type="radio" name="${ot.id}" value="${moz}" onchange="saveAnswer('${ot.id}', '${moz}')">
+                                <span>${moz}</span>
+                            </label>`;
+                        });
+                        html += `</div>`;
+                    } else {
+                        html += `<input type="text" class="form-control" placeholder="Vaše odpověď..." oninput="saveAnswer('${ot.id}', this.value)">`;
+                    }
+                    html += `</div>`;
+                });
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function saveAnswer(qid, val) {
+            state.answers[qid] = val.trim();
+            updateProgress();
+            sessionStorage.setItem('test_state', JSON.stringify(state));
+        }
+
+        function updateProgress() {
+            const totalQ = TEST_DATA.cviceni.reduce((acc, cv) => acc + cv.otazky.length, 0);
+            const answeredQ = Object.values(state.answers).filter(v => v !== '').length;
+            const pct = (answeredQ / totalQ) * 100;
+            document.getElementById('test-progress').style.width = pct + '%';
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+                document.getElementById('fs-btn').innerText = '🔲 Vypnout Fullscreen';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    document.getElementById('fs-btn').innerText = '🔲 Zapnout Fullscreen';
+                }
+            }
+        }
+
+        function startTest() {
+            const name = nameInput.value.trim();
+            if(name.length < 3) return;
+            
+            state.studentName = name;
+            state.startTime = new Date().toISOString();
+            
+            document.getElementById('screen-intro').classList.remove('active');
+            document.getElementById('screen-test').classList.add('active');
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('header-user').innerText = state.studentName;
+
+            buildExercises();
+            startTimer();
+            sessionStorage.setItem('test_state', JSON.stringify(state));
+        }
+
+        function startTimer() {
+            const timerEl = document.getElementById('timer');
+            state.timerInterval = setInterval(() => {
+                state.timeLeft--;
+                let m = Math.floor(state.timeLeft / 60);
+                let s = state.timeLeft % 60;
+                timerEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+
+                if(state.timeLeft <= 300) {
+                    timerEl.classList.add('warning');
+                }
+
+                if(state.timeLeft <= 0) {
+                    clearInterval(state.timerInterval);
+                    submitTest();
+                }
+            }, 1000);
+        }
+
+        // Security locks
+        window.addEventListener('blur', () => triggerLock('Ztráta focuse / opuštění okna'));
+        document.addEventListener('visibilitychange', () => {
+            if(document.hidden) triggerLock('Přepnutí záložky');
+        });
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if(e.key === 'F12' || (e.ctrlKey && ['u','i','s','p','a','c','x'].includes(e.key.toLowerCase()))) {
+                e.preventDefault();
+                triggerLock('Zakázaná klávesová zkratka');
+            }
+        });
+
+        function triggerLock(reason) {
+            if(document.getElementById('screen-results').classList.contains('active')) return;
+            state.locked = true;
+            clearInterval(state.timerInterval);
+            document.getElementById('lock-screen').classList.add('active');
+            sessionStorage.setItem('test_locked', 'true');
+        }
+
+        // Secret unlock
+        let clickCount = 0;
+        document.getElementById('secret-trigger').addEventListener('click', () => {
+            clickCount++;
+            if(clickCount >= 5) {
+                document.getElementById('unlock-container').classList.remove('hidden');
+            }
+        });
+
+        function tryUnlock() {
+            const pwd = document.getElementById('unlock-password').value;
+            if(pwd === '1234') {
+                state.locked = false;
+                document.getElementById('lock-screen').classList.remove('active');
+                document.getElementById('unlock-container').classList.add('hidden');
+                clickCount = 0;
+                document.getElementById('unlock-password').value = '';
+                startTimer();
+            } else {
+                alert('Nesprávné heslo');
+            }
+        }
+
+        // Evaluation
+        function submitTest() {
+            if(state.locked) return;
+            clearInterval(state.timerInterval);
+            state.endTime = new Date().toISOString();
+
+            let totalPoints = 0;
+            let maxPoints = 0;
+            let reviewHtml = '';
+
+            TEST_DATA.cviceni.forEach((cv, idx) => {
+                let cvPoints = 0;
+                let cvMax = cv.otazky.reduce((a,b)=>a+b.body, 0);
+                maxPoints += cvMax;
+                
+                let cvReview = `<h4>${idx + 1}. ${cv.nadpis}</h4>`;
+
+                cv.otazky.forEach(ot => {
+                    let userAns = (state.answers[ot.id] || '').toLowerCase();
+                    let correctAns = ot.spravne.toLowerCase();
+                    let isCorrect = false;
+
+                    if(cv.typ === 'choice') {
+                        if(userAns === correctAns) isCorrect = true;
+                    } else {
+                        let tolerances = [correctAns, ...(ot.tolerance || []).map(t => t.toLowerCase())];
+                        if(tolerances.includes(userAns)) isCorrect = true;
+                    }
+
+                    if(isCorrect) {
+                        totalPoints += ot.body;
+                        cvPoints += ot.body;
+                    }
+
+                    cvReview += `<div class="review-item ${isCorrect ? 'correct' : 'incorrect'}">
+                        <p><strong>Zadání:</strong> ${ot.text}</p>
+                        <p><strong>Vaše odpověď:</strong> ${state.answers[ot.id] || '(nezadáno)'} ${isCorrect ? '✓' : '✗'}</p>
+                        ${!isCorrect ? `<p><strong>Správná odpověď:</strong> ${ot.spravne}</p>` : ''}
+                        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 4px;">${ot.vysvetleni}</p>
+                    </div>`;
+                });
+                reviewHtml += cvReview;
+            });
+
+            let rawPct = (totalPoints / maxPoints) * 100;
+            let pct = Math.ceil(rawPct);
+            let grade = 5;
+            if(pct >= 88) grade = 1;
+            else if(pct >= 74) grade = 2;
+            else if(pct >= 59) grade = 3;
+            else if(pct >= 44) grade = 4;
+
+            document.getElementById('res-score-text').innerText = `${totalPoints} / ${maxPoints} bodů`;
+            document.getElementById('res-percentage').innerText = `${pct} %`;
+            document.getElementById('res-grade').innerText = `Známka: ${grade} (${getGradeText(grade)})`;
+            document.getElementById('review-container').innerHTML = reviewHtml;
+
+            // Deadline for screenshot (3 mins)
+            let deadlineTime = new Date(new Date(state.endTime).getTime() + 3 * 60000);
+            let deadlineStr = deadlineTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('deadline-info').innerText = `Screenshot odeslat nejpozději do ${deadlineStr}`;
+
+            // Generate Verification payload
+            let durationSec = Math.round((new Date(state.endTime) - new Date(state.startTime)) / 1000);
+            let payloadObj = {
+                v: "OVR1",
+                test: TEST_DATA.nazev,
+                name: state.studentName.trim().toLowerCase(),
+                id: state.testId,
+                start: state.startTime,
+                end: state.endTime,
+                dur: durationSec,
+                pts: totalPoints,
+                max: maxPoints,
+                pct: pct,
+                grade: grade
+            };
+
+            let jsonPayload = JSON.stringify(payloadObj);
+            let b64 = btoa(unescape(encodeURIComponent(jsonPayload)));
+            let rawHashStr = jsonPayload + VERIFY_SECRET;
+            let hashVal = hashCode(rawHashStr).toString(36).toUpperCase();
+            let verificationCode = `OVR-${hashVal.substring(0,4)}-${hashVal.substring(4,8)}`;
+            
+            let fallbackStr = `OVR1|${b64}|${verificationCode}`;
+            document.getElementById('fallback-string').innerText = fallbackStr;
+
+            // Render Fake QR (SVG pattern)
+            renderOfflineQR(fallbackStr);
+
+            document.getElementById('screen-test').classList.remove('active');
+            document.getElementById('screen-results').classList.add('active');
+            window.scrollTo(0,0);
+            sessionStorage.clear();
+        }
+
+        function getGradeText(g) {
+            switch(g) {
+                case 1: return 'Výborný';
+                case 2: return 'Chvalitebný';
+                case 3: return 'Dobrý';
+                case 4: return 'Dostatečný';
+                default: return 'Nedostatečný';
+            }
+        }
+
+        function hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash);
+        }
+
+        function renderOfflineQR(text) {
+            let svg = `<svg width="100" height="100" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+                <rect width="25" height="25" fill="white"/>`;
+            let h = hashCode(text);
+            for(let i=0; i<25; i++) {
+                for(let j=0; j<25; j++) {
+                    if((i+j*3 + h)%2 === 0 || (i<7 && j<7) || (i>17 && j<7) || (i<7 && j>17)) {
+                        if(!((i>2 && i<6 && j>2 && j<6) || (i>19 && i<22 && j>2 && j<6) || (i>2 && i<6 && j>19 && j<22))) {
+                            svg += `<rect x="${i}" y="${j}" width="1" height="1" fill="black"/>`;
+                        }
+                    }
+                }
+            }
+            // Add position markers
+            svg += `<rect x="2" y="2" width="3" height="3" fill="black"/><rect x="20" y="2" width="3" height="3" fill="black"/><rect x="2" y="20" width="3" height="3" fill="black"/>`;
+            svg += `</svg>`;
+            document.getElementById('qr-container').innerHTML = svg;
+        }
+
+        function copyFallback() {
+            let txt = document.getElementById('fallback-string').innerText;
+            navigator.clipboard.writeText(txt).then(() => alert('Údaje zkopírovány do schránky!'));
+        }
+
+        // Teacher Mode Logic
+        function toggleTeacherMode() {
+            const modal = document.getElementById('teacher-modal');
+            if(modal.style.display === 'flex') {
+                modal.style.display = 'none';
+            } else {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function authTeacher() {
+            let name = document.getElementById('t-name').value.trim();
+            let pin = document.getElementById('t-pin').value.trim();
+
+            if(name === 'Daniel Baláž' && pin === '123') {
+                document.getElementById('teacher-auth-section').classList.add('hidden');
+                document.getElementById('teacher-panel').classList.remove('hidden');
+            } else {
+                alert('Nesprávné jméno učitele nebo PIN!');
+            }
+        }
+
+        function verifyPayload() {
+            let input = document.getElementById('verify-input').value.trim();
+            let resBox = document.getElementById('verify-result');
+            
+            try {
+                let parts = input.split('|');
+                if(parts.length !== 3 || parts[0] !== 'OVR1') throw new Error('Formát');
+                
+                let jsonStr = decodeURIComponent(escape(atob(parts[1])));
+                let payload = JSON.parse(jsonStr);
+                let hashVal = hashCode(jsonStr + VERIFY_SECRET).toString(36).toUpperCase();
+                let expectedCode = `OVR-${hashVal.substring(0,4)}-${hashVal.substring(4,8)}`;
+
+                if(expectedCode === parts[2]) {
+                    let deadline = new Date(new Date(payload.end).getTime() + 3 * 60000);
+                    let now = new Date();
+                    let timeWarning = now > deadline ? '<br><span style="color:var(--error)">⚠️ Screenshot odeslán po limitu!</span>' : '';
+
+                    resBox.style.background = 'var(--success-bg)';
+                    resBox.style.color = '#166534';
+                    resBox.innerHTML = `✓ Výsledek sedí!<br><strong>Student:</strong> ${payload.name}<br><strong>Test:</strong> ${payload.test}<br><strong>Bodů:</strong> ${payload.pts}/${payload.max} (${payload.pct}%, Známka: ${payload.grade})${timeWarning}`;
+                } else {
+                    throw new Error('Hash nesouhlasí');
+                }
+            } catch(e) {
+                resBox.style.background = 'var(--error-bg)';
+                resBox.style.color = '#991b1b';
+                resBox.innerHTML = `✗ Výsledek nesedí nebo je řetězec neplatný!`;
+            }
+        }
+    </script>
+</body>
+</html>
