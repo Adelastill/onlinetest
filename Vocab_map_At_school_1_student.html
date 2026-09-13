@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab map - At school 1</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --text-muted: #4b5563;
+            --border-color: #e5e7eb;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .timer {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9px;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+        }
+
+        .timer.blink {
+            background: var(--danger-color);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        main {
+            flex: 1;
+            max-width: 800px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        /* Navigation bar for exercises */
+        .exercise-nav {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: thin;
+        }
+
+        .nav-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 9px;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+        }
+
+        .nav-btn.completed::after {
+            content: "✓";
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        .nav-btn.active.completed::after {
+            color: white;
+        }
+
+        /* Exercise panels */
+        .exercise-panel {
+            display: none;
+        }
+        .exercise-panel.active {
+            display: block;
+        }
+
+        .question-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .question-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .question-text {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Options */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-label:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+            border-color: #667eea;
+        }
+
+        .option-label input[type="radio"] {
+            accent-color: #667eea;
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        /* Inputs */
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        input[type="text"]:focus {
+            border-color: #667eea;
+        }
+
+        /* Buttons & Footer */
+        .btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background: var(--bg-color);
+            box-shadow: none;
+        }
+
+        .panel-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Modals & Overlays */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 14px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Warnings / Lock */
+        .warning-banner {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #b45309;
+            padding: 1rem;
+            border-radius: 9px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        textarea.code-output {
+            width: 100%;
+            height: 100px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            resize: none;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SELF-CHECK LISTENER (Must be first in script execution flow conceptually) -->
+    <script>
+        window.addEventListener('message', function(ev){
+            var d = ev.data || {};
+            if (d.type !== 'SELFCHECK_BUILD') return;
+            try {
+                var code = buildSubmitCode(d.answers);
+                parent.postMessage({ type:'SELFCHECK_CODE', code: code }, '*');
+            } catch (err) {
+                parent.postMessage({ type:'SELFCHECK_ERROR', where:'student', msg:String(err) }, '*');
+            }
+        });
+    </script>
+
+    <!-- INTRO MODAL -->
+    <div id="intro-modal" class="overlay">
+        <div class="modal">
+            <h2>Vocab map - At school 1</h2>
+            <p><strong>Pro koho:</strong> Kvinta | <strong>Úroveň:</strong> B1 | <strong>Čas:</strong> 15 minut</p>
+            <p style="font-size: 0.875rem; color: var(--text-muted);">Answer all questions based on the vocabulary list 'At School' and Life Vision Unit 01. Pay attention to instructions for each exercise.</p>
+            
+            <div class="warning-banner">
+                ⚠️ <strong>Pravidla:</strong> Test sleduje opuštění okna. Po 3. odchodu se test zamkne a bude vyžadovat kód od vyučujícího.
+            </div>
+
+            <div>
+                <label style="display:block; font-size:0.875rem; font-weight:500; margin-bottom:0.25rem;">Jméno a příjmení / Kód studenta:</label>
+                <input type="text" id="student-name-input" placeholder="Zadej své jméno (min. 3 znaky)..." autocomplete="off">
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" class="btn btn-secondary" id="fs-btn">🔲 Režim celé obrazovky</button>
+            </div>
+
+            <button type="button" class="btn" id="start-btn" disabled style="opacity: 0.5;">Spustit test</button>
+        </div>
+    </div>
+
+    <!-- LOCK MODAL -->
+    <div id="lock-modal" class="overlay hidden">
+        <div class="modal" style="text-align: center;">
+            <div style="font-size: 3rem;">🔒</div>
+            <h3>Test je zamčený</h3>
+            <p id="lock-message">Opustil jsi okno testu příliš mnohokrát. Zavolej vyučujícího.</p>
+            <div>
+                <input type="text" id="unlock-code-input" placeholder="Odemykací kód vyučujícího..." style="text-align: center;">
+            </div>
+            <button type="button" class="btn" id="unlock-btn">Odemknout</button>
+        </div>
+    </div>
+
+    <!-- ALREADY SUBMITTED MODAL -->
+    <div id="submitted-modal" class="overlay hidden">
+        <div class="modal" style="text-align: center;">
+            <h3>Test již byl odevzdán</h3>
+            <p id="submitted-msg-text">Tento test jsi už odevzdán/a. Další pokus povoluje pouze vyučující.</p>
+            <div>
+                <input type="text" id="reopen-code-input" placeholder="Odemykací kód vyučujícího..." style="text-align: center;">
+            </div>
+            <button type="button" class="btn" id="reopen-btn">Povolit nový pokus</button>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <h1 id="header-title">Vocab map - At school 1</h1>
+        <div class="header-meta">
+            <span id="header-student"></span>
+            <div class="timer" id="timer-display">15:00</div>
+        </div>
+    </header>
+
+    <!-- MAIN APP INTERFACE -->
+    <main id="app-main" class="hidden">
+        
+        <!-- Exercise Navigation Bar -->
+        <div class="exercise-nav" id="exercise-nav">
+            <!-- Dynamically populated -->
+        </div>
+
+        <!-- Exercise Content Container -->
+        <div class="card">
+            <div id="exercise-container">
+                <!-- Dynamically populated panels -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SUBMISSION MODAL / SCREEN -->
+    <div id="finish-modal" class="overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <h3>Odevzdání testu</h3>
+            <p>Zkontroluj své údaje a zkopíruj si odevzdávací kód.</p>
+            <div style="font-size: 0.875rem; background: var(--bg-color); padding: 1rem; border-radius: 9px; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div><strong>Jméno:</strong> <span id="fin-name"></span></div>
+                <div><strong>Test ID:</strong> <span id="fin-testid">Vocab map - At school 1</span></div>
+                <div><strong>Zodpovězeno otázek:</strong> <span id="fin-answered"></span> / 20</div>
+                <div><strong>Čas odevzdání:</strong> <span id="fin-time"></span></div>
+            </div>
+            <div>
+                <label style="font-size: 0.875rem; font-weight: 500; display: block; margin-bottom: 0.25rem;">Odevzdávací kód:</label>
+                <textarea id="submission-code-output" class="code-output" readonly></textarea>
+            </div>
+            <p style="font-size: 0.875rem; text-align: center; color: var(--text-muted); font-weight: 500;">Výsledky ti sdělí vyučující.</p>
+            <button type="button" class="btn" id="copy-code-btn">Kopírovat odevzdávací kód</button>
+        </div>
+    </div>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        const TEST_ID = "Vocab map - At school 1";
+        const SUBMIT_SALT = "W4BUWWPKRQW2";
+        const UNLOCK_CODE = "74269";
+
+        const testData = {
+ "nazev": "Vocab map - At school 1",
+ "pokyny": "Answer all questions based on the vocabulary list 'At School' and Life Vision Unit 01. Pay attention to instructions for each exercise.",
+ "cviceni": [
+  {
+   "id": "c1",
+   "nadpis": "Multiple Choice",
+   "zadani": "Choose the correct option for each question.",
+   "typ": "choice",
+   "otazky": [
+    {
+     "id": "c1q1",
+     "text": "What do you do when the teacher asks a question and you want to reply?",
+     "body": 1,
+     "moznosti": [
+      "to answer",
+      "to ask a question",
+      "to lose temper",
+      "to do homework"
+     ]
+    },
+    {
+     "id": "c1q2",
+     "text": "What is the term for a schedule showing when lessons take place?",
+     "body": 1,
+     "moznosti": [
+      "a register",
+      "a lesson timetable",
+      "an exercise book",
+      "a tray"
+     ]
+    },
+    {
+     "id": "c1q3",
+     "text": "Which action describes what a teacher does after students finish a test?",
+     "body": 1,
+     "moznosti": [
+      "to photocopy sth",
+      "to mark (a test)",
+      "to cross",
+      "to tick"
+     ]
+    },
+    {
+     "id": "c1q4",
+     "text": "What do students often use to write notes during lessons?",
+     "body": 1,
+     "moznosti": [
+      "an exercise book",
+      "a whiteboard marker",
+      "a whistle",
+      "a lunch box"
+     ]
+    },
+    {
+     "id": "c1q5",
+     "text": "What is the term for the head of a school in the UK system?",
+     "body": 1,
+     "moznosti": [
+      "a teacher",
+      "a student",
+      "a headmaster (UK) / a principal (US)",
+      "a register"
+     ]
+    },
+    {
+     "id": "c1q6",
+     "text": "What do you do if you have serious difficulties with a subject?",
+     "body": 1,
+     "moznosti": [
+      "to excel at sth",
+      "to struggle with sth",
+      "to pass (a test)",
+      "to share"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "nadpis": "Word to Definition",
+   "zadani": "Match each word from the left column with its correct definition on the right.",
+   "typ": "matching",
+   "otazky": [
+    {
+     "id": "c2q1",
+     "text": "a school canteen",
+     "body": 1,
+     "moznosti": [
+      "A room or building where students can buy and eat lunch at school.",
+      "A small box used to carry food from home to school.",
+      "A book used by teachers to check attendance and record names.",
+      "A short period of punishment after normal school hours.",
+      "A period of time during the academic year, such as a semester."
+     ]
+    },
+    {
+     "id": "c2q2",
+     "text": "a lunch box",
+     "body": 1,
+     "moznosti": [
+      "A small box used to carry food from home to school.",
+      "A room or building where students can buy and eat lunch at school.",
+      "A book used by teachers to check attendance and record names.",
+      "A short period of punishment after normal school hours.",
+      "A period of time during the academic year, such as a semester."
+     ]
+    },
+    {
+     "id": "c2q3",
+     "text": "a register",
+     "body": 1,
+     "moznosti": [
+      "A book used by teachers to check attendance and record names.",
+      "A small box used to carry food from home to school.",
+      "A room or building where students can buy and eat lunch at school.",
+      "A short period of punishment after normal school hours.",
+      "A period of time during the academic year, such as a semester."
+     ]
+    },
+    {
+     "id": "c2q4",
+     "text": "to be in detention",
+     "body": 1,
+     "moznosti": [
+      "A short period of punishment after normal school hours.",
+      "A room or building where students can buy and eat lunch at school.",
+      "A book used by teachers to check attendance and record names.",
+      "A period of time during the academic year, such as a semester.",
+      "An official title given by a university after finishing a course."
+     ]
+    },
+    {
+     "id": "c2q5",
+     "text": "term",
+     "body": 1,
+     "moznosti": [
+      "A period of time during the academic year, such as a semester.",
+      "A short period of punishment after normal school hours.",
+      "An official title given by a university after finishing a course.",
+      "A book used by teachers to check attendance and record names.",
+      "A room or building where students can buy and eat lunch at school."
+     ]
+    },
+    {
+     "id": "c2q6",
+     "text": "degree",
+     "body": 1,
+     "moznosti": [
+      "An official title given by a university after finishing a course.",
+      "A period of time during the academic year, such as a semester.",
+      "A short period of punishment after normal school hours.",
+      "A room or building where students can buy and eat lunch at school.",
+      "A book used by teachers to check attendance and record names."
+     ]
+    },
+    {
+     "id": "c2q7",
+     "text": "essay",
+     "body": 1,
+     "moznosti": [
+      "A short piece of writing on a particular subject, usually written by students.",
+      "An official title given by a university after finishing a course.",
+      "A period of time during the academic year, such as a semester.",
+      "A book used by teachers to check attendance and record names.",
+      "A small box used to carry food from home to school."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "nadpis": "Open Cloze (First Letter)",
+   "zadani": "Complete the sentences by writing the missing words. The first letter and length hints are provided.",
+   "typ": "open",
+   "otazky": [
+    {
+     "id": "c3q1",
+     "text": "The students had to h___ i___ their history essays before Friday.",
+     "body": 1
+    },
+    {
+     "id": "c3q2",
+     "text": "When the school b___ went off, everyone rushed out of the classroom.",
+     "body": 1
+    },
+    {
+     "id": "c3q3",
+     "text": "She forgot her books, so she had to s___ at a desk with her classmate.",
+     "body": 1
+    },
+    {
+     "id": "c3q4",
+     "text": "The teacher used a white b___ marker to write on the board.",
+     "body": 1
+    },
+    {
+     "id": "c3q5",
+     "text": "If you don't study hard enough, you might f___ the final test.",
+     "body": 1
+    },
+    {
+     "id": "c3q6",
+     "text": "The teacher called out names from the r___ to check who was absent.",
+     "body": 1
+    },
+    {
+     "id": "c3q7",
+     "text": "Some teenagers are unluckily b___ at school by older kids.",
+     "body": 1
+    }
+   ]
+  }
+ ]
+};
+
+        // State Management
+        let state = {
+            studentName: "",
+            startTime: null,
+            endTime: null,
+            answers: {}, // qId -> answer string
+            currentExerciseIndex: 0,
+            timeLeft: 15 * 60,
+            attemptCount: 1,
+            isLocked: false,
+            isSubmitted: false,
+            blurCount: 0,
+            totalBlurSeconds: 0,
+            blurEvents: [],
+            unlockCount: 0
+        };
+
+        let storageKey = null;
+        let timerInterval = null;
+        let lastBlurTime = null;
+        let appInitialized = false;
+
+        // Cyrb53 Hash Implementation
+        function cyrb53(str, seed = 0) {
+            let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+            for (let i = 0, ch; i < str.length; i++) {
+                ch = str.charCodeAt(i);
+                h1 = Math.imul(h1 ^ ch, 2654435761);
+                h2 = Math.imul(h2 ^ ch, 1597334677);
+            }
+            h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+            h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+            return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+        }
+
+        function base64UrlEncode(str) {
+            return btoa(unescape(encodeURIComponent(str)))
+                .replace(/=/g, '')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_');
+        }
+
+        function buildSubmitCode(answersMap) {
+            const payload = {
+                v: 1,
+                t: TEST_ID,
+                n: state.studentName,
+                s: state.startTime ? new Date(state.startTime).toISOString() : new Date().toISOString(),
+                e: state.endTime ? new Date(state.endTime).toISOString() : new Date().toISOString(),
+                d: state.startTime ? Math.floor((Date.now() - state.startTime) / 1000) : 0,
+                a: answersMap,
+                x: {
+                    c: state.blurCount,
+                    s: state.totalBlurSeconds,
+                    e: state.blurEvents
+                },
+                o: state.unlockCount,
+                p: state.attemptCount
+            };
+            const jsonStr = JSON.stringify(payload);
+            const b64 = base64UrlEncode(jsonStr);
+            const hashNum = cyrb53(b64 + SUBMIT_SALT);
+            const hashStr = hashNum.toString(36).toUpperCase();
+            return `TST1.${b64}.${hashStr}`;
+        }
+
+        // Safe Storage Helpers
+        function saveState() {
+            if (!storageKey) return;
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(state));
+            } catch (e) {}
+        }
+
+        function loadSavedState() {
+            if (!storageKey) return false;
+            try {
+                const saved = localStorage.getItem(storageKey);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('student-name-input');
+            const startBtn = document.getElementById('start-btn');
+            const fsBtn = document.getElementById('fs-btn');
+
+            nameInput.addEventListener('input', () => {
+                const val = nameInput.value.trim();
+                if (val.length >= 3) {
+                    startBtn.disabled = false;
+                    startBtn.style.opacity = "1";
+                } else {
+                    startBtn.disabled = true;
+                    startBtn.style.opacity = "0.5";
+                }
+            });
+
+            fsBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                }
+            });
+
+            startBtn.addEventListener('click', () => {
+                const name = nameInput.value.trim();
+                if (name.length < 3) return;
+                
+                state.studentName = name;
+                storageKey = `test_state_${btoa(TEST_ID)}_${btoa(name)}`;
+                
+                // Check if already submitted previously under this storage key
+                try {
+                    const existing = localStorage.getItem(storageKey);
+                    if (existing) {
+                        const parsed = JSON.parse(existing);
+                        if (parsed.isSubmitted) {
+                            state = parsed;
+                            document.getElementById('intro-modal').classList.add('hidden');
+                            document.getElementById('submitted-modal').classList.remove('hidden');
+                            return;
+                        }
+                    }
+                } catch(e){}
+
+                state.startTime = Date.now();
+                saveState();
+                
+                document.getElementById('intro-modal').classList.add('hidden');
+                initTest();
+            });
+
+            // Unlock handlers
+            document.getElementById('unlock-btn').addEventListener('click', () => {
+                const code = document.getElementById('unlock-code-input').value.trim();
+                if (code === UNLOCK_CODE) {
+                    state.isLocked = false;
+                    state.blurCount = 0; // Reset blur count on unlock to prevent immediate relock
+                    state.unlockCount++;
+                    saveState();
+                    document.getElementById('lock-modal').classList.add('hidden');
+                    document.getElementById('unlock-code-input').value = "";
+                } else {
+                    alert('Nesprávný kód!');
+                }
+            });
+
+            document.getElementById('reopen-btn').addEventListener('click', () => {
+                const code = document.getElementById('reopen-code-input').value.trim();
+                if (code === UNLOCK_CODE) {
+                    state.isSubmitted = false;
+                    state.attemptCount++;
+                    state.startTime = Date.now();
+                    state.timeLeft = 15 * 60;
+                    state.answers = {};
+                    saveState();
+                    document.getElementById('submitted-modal').classList.add('hidden');
+                    initTest();
+                } else {
+                    alert('Nesprávný kód!');
+                }
+            });
+
+            document.getElementById('copy-code-btn').addEventListener('click', () => {
+                const ta = document.getElementById('submission-code-output');
+                ta.select();
+                document.execCommand('copy');
+                alert('Kód zkopírován do schránky!');
+            });
+
+            // Anti-cheat safety setup
+            setupAntiCheat();
+        });
+
+        function initTest() {
+            appInitialized = true;
+            document.getElementById('app-main').classList.remove('hidden');
+            document.getElementById('header-student').textContent = state.studentName;
+
+            renderExerciseNav();
+            renderExercisePanel(state.currentExerciseIndex);
+            startTimer();
+        }
+
+        function renderExerciseNav() {
+            const nav = document.getElementById('exercise-nav');
+            nav.innerHTML = '';
+            testData.cviceni.forEach((ex, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `nav-btn ${idx === state.currentExerciseIndex ? 'active' : ''}`;
+                
+                // Check if all questions in exercise are answered
+                const isComplete = ex.otazky.every(q => state.answers[q.id] && state.answers[q.id].trim() !== '');
+                if (isComplete) btn.classList.add('completed');
+
+                btn.textContent = `${idx + 1}. ${ex.nadpis}`;
+                btn.onclick = () => {
+                    saveCurrentInputs();
+                    state.currentExerciseIndex = idx;
+                    saveState();
+                    renderExerciseNav();
+                    renderExercisePanel(idx);
+                };
+                nav.appendChild(btn);
+            });
+        }
+
+        function renderExercisePanel(idx) {
+            const container = document.getElementById('exercise-container');
+            const ex = testData.cviceni[idx];
+
+            let html = `
+                <div class="exercise-panel active">
+                    <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${ex.nadpis}</h2>
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem;">${ex.zadani}</p>
+                    <div class="questions-container">
+            `;
+
+            ex.otazky.forEach((q, qIdx) => {
+                const savedAns = state.answers[q.id] || "";
+                html += `<div class="question-item" data-qid="${q.id}">`;
+                html += `<div class="question-text">${qIdx + 1}. ${q.text}</div>`;
+
+                if (ex.typ === 'choice' || ex.typ === 'matching') {
+                    html += `<div class="options-list">`;
+                    q.moznosti.forEach(opt => {
+                        const checked = savedAns === opt ? 'checked' : '';
+                        html += `
+                            <label class="option-label">
+                                <input type="radio" name="${q.id}" value="${escapeHtml(opt)}" ${checked}>
+                                <span>${escapeHtml(opt)}</span>
+                            </label>
+                        `;
+                    });
+                    html += `</div>`;
+                } else if (ex.typ === 'open') {
+                    html += `
+                        <div>
+                            <input type="text" class="open-input" data-qid="${q.id}" value="${escapeHtml(savedAns)}" placeholder="Type your answer..." autocomplete="off">
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            });
+
+            html += `
+                    </div>
+                    <div class="panel-footer">
+                        <div>
+                            ${idx > 0 ? `<button type="button" class="btn btn-secondary" id="prev-btn">Předchozí</button>` : ''}
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            ${idx < testData.cviceni.length - 1 ? `<button type="button" class="btn" id="next-btn">Další</button>` : `<button type="button" class="btn" id="submit-btn" style="background: var(--success-color);">Odevzdat test</button>`}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+
+            // Bind events for navigation and inputs inside panel
+            const prevBtn = document.getElementById('prev-btn');
+            if (prevBtn) prevBtn.onclick = () => {
+                saveCurrentInputs();
+                state.currentExerciseIndex--;
+                saveState();
+                renderExerciseNav();
+                renderExercisePanel(state.currentExerciseIndex);
+            };
+
+            const nextBtn = document.getElementById('next-btn');
+            if (nextBtn) nextBtn.onclick = () => {
+                saveCurrentInputs();
+                state.currentExerciseIndex++;
+                saveState();
+                renderExerciseNav();
+                renderExercisePanel(state.currentExerciseIndex);
+            };
+
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.onclick = () => {
+                saveCurrentInputs();
+                handlePreSubmitCheck();
+            };
+
+            // Bind input changes to state immediately
+            container.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('change', () => {
+                    saveCurrentInputs();
+                    renderExerciseNav();
+                });
+                inp.addEventListener('input', () => {
+                    saveCurrentInputs();
+                });
+            });
+        }
+
+        function saveCurrentInputs() {
+            const container = document.getElementById('exercise-container');
+            const ex = testData.cviceni[state.currentExerciseIndex];
+
+            ex.otazky.forEach(q => {
+                if (ex.typ === 'choice' || ex.typ === 'matching') {
+                    const checked = container.querySelector(`input[name="${q.id}"]:checked`);
+                    if (checked) {
+                        state.answers[q.id] = checked.value;
+                    }
+                } else if (ex.typ === 'open') {
+                    const input = container.querySelector(`input[data-qid="${q.id}"]`);
+                    if (input) {
+                        state.answers[q.id] = input.value.trim();
+                    }
+                }
+            });
+            saveState();
+        }
+
+        function handlePreSubmitCheck() {
+            let totalQ = 0;
+            let answeredQ = 0;
+            testData.cviceni.forEach(ex => {
+                ex.otazky.forEach(q => {
+                    totalQ++;
+                    if (state.answers[q.id] && state.answers[q.id].trim() !== '') {
+                        answeredQ++;
+                    }
+                });
+            });
+
+            if (answeredQ < totalQ) {
+                if (!confirm(`Máš nevyplněné otázky (${answeredQ}/${totalQ}). Opravdu chceš test odevzdat?`)) {
+                    return;
+                }
+            } else {
+                if (!confirm("Opravdu chceš test odevzdat?")) {
+                    return;
+                }
+            }
+
+            finalizeSubmission();
+        }
+
+        function finalizeSubmission() {
+            state.isSubmitted = true;
+            state.endTime = Date.now();
+            saveState();
+
+            let answeredQ = 0;
+            let totalQ = 0;
+            testData.cviceni.forEach(ex => {
+                ex.otazky.forEach(q => {
+                    totalQ++;
+                    if (state.answers[q.id] && state.answers[q.id].trim() !== '') answeredQ++;
+                });
+            });
+
+            const code = buildSubmitCode(state.answers);
+
+            document.getElementById('fin-name').textContent = state.studentName;
+            document.getElementById('fin-answered').textContent = answeredQ;
+            document.getElementById('fin-time').textContent = new Date(state.endTime).toLocaleTimeString();
+            document.getElementById('submission-code-output').value = code;
+
+            document.getElementById('finish-modal').classList.remove('hidden');
+        }
+
+        function startTimer() {
+            const timerDisplay = document.getElementById('timer-display');
+            
+            // Calculate time left based on startTime if running
+            if (state.startTime) {
+                const elapsedSec = Math.floor((Date.now() - state.startTime) / 1000);
+                state.timeLeft = Math.max(0, (15 * 60) - elapsedSec);
+            }
+
+            timerInterval = setInterval(() => {
+                if (state.isSubmitted || state.isLocked) return;
+
+                state.timeLeft--;
+                saveState();
+
+                const m = Math.floor(state.timeLeft / 60);
+                const s = state.timeLeft % 60;
+                timerDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+                if (state.timeLeft <= 300) { // Last 5 mins
+                    timerDisplay.classList.add('blink');
+                }
+
+                if (state.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Čas vypršel! Test bude odevzdán.');
+                    finalizeSubmission();
+                }
+            }, 1000);
+        }
+
+        // Anti-cheat & Security Lock Mechanism
+        function setupAntiCheat() {
+            let loadTime = Date.now();
+
+            // Disable shortcuts
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('keydown', e => {
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && ['u', 's', 'p', 'a', 'c', 'x', 'i'].includes(e.key.toLowerCase())) ||
+                    (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(e.key.toLowerCase()))) {
+                    e.preventDefault();
+                    if (e.key === 'F12' || (e.ctrlKey && ['u', 'i'].includes(e.key.toLowerCase()))) {
+                        registerBlurEvent("Forbidden Shortcut");
+                    }
+                }
+            });
+
+            // Visibility / Blur handling
+            window.addEventListener('blur', () => {
+                if (Date.now() - loadTime < 2000) return; // Ignore first 2 seconds
+                if (state.isSubmitted || state.isLocked) return;
+                lastBlurTime = Date.now();
+            });
+
+            window.addEventListener('focus', () => {
+                if (!lastBlurTime) return;
+                const duration = (Date.now() - lastBlurTime) / 1000;
+                lastBlurTime = null;
+
+                if (duration < 1) return; // Ignore short blur < 1s
+
+                registerBlurEvent("Window Blur");
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (Date.now() - loadTime < 2000) return;
+                    if (state.isSubmitted || state.isLocked) return;
+                    lastBlurTime = Date.now();
+                } else {
+                    if (!lastBlurTime) return;
+                    const duration = (Date.now() - lastBlurTime) / 1000;
+                    lastBlurTime = null;
+                    if (duration < 1) return;
+                    registerBlurEvent("Visibility Hidden");
+                }
+            });
+
+            window.addEventListener('beforeunload', (e) => {
+                if (!state.isSubmitted) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        }
+
+        function registerBlurEvent(type) {
+            state.blurCount++;
+            state.totalBlurSeconds += 2; // Approximate tracking
+            state.blurEvents.push({ t: type, ts: new Date().toISOString() });
+            saveState();
+
+            if (state.blurCount <= 2) {
+                alert(`Varování (${state.blurCount}/3): Opustil jsi okno testu! Při dalším odchodu se test zamkne.`);
+            } else {
+                state.isLocked = true;
+                saveState();
+                document.getElementById('lock-modal').classList.remove('hidden');
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
