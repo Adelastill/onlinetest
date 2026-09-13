@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LV Inter 0.1 - At school 1</title>
+<style>
+:root {
+  --primary: #667eea;
+  --secondary: #764ba2;
+  --accent: #ff6b6b;
+  --bg: #f4f7f6;
+  --card-bg: #ffffff;
+  --text: #333333;
+  --text-light: #666666;
+  --border: #e0e0e0;
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; user-select: none; -webkit-user-select: none; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 16px 24px; border-radius: 0 0 16px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+header h1 { font-size: 1.25rem; font-weight: 600; }
+.timer { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.timer.blink { background: var(--danger); animation: pulse 1s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+main { flex: 1; max-width: 800px; width: 100%; margin: 24px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 20px; }
+
+/* Nav Bar */
+.nav-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+.nav-btn { background: #fff; border: 1px solid var(--border); padding: 10px 16px; border-radius: 9px; cursor: pointer; font-weight: 500; color: var(--text-light); white-space: nowrap; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
+.nav-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border-color: transparent; }
+.nav-btn.completed::after { content: '✓'; color: var(--success); font-weight: bold; }
+.nav-btn.active.completed::after { color: #fff; }
+
+/* Exercise Card */
+.card { background: var(--card-bg); border-radius: 14px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); display: none; }
+.card.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.card h2 { font-size: 1.2rem; color: var(--secondary); margin-bottom: 6px; }
+.card p.instruction { color: var(--text-light); font-size: 0.95rem; margin-bottom: 20px; }
+
+.question { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.question:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.question-text { font-weight: 500; margin-bottom: 12px; line-height: 1.4; }
+
+/* Options */
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option-label { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+.option-label:hover { background: #f8fafc; }
+.option-label input { accent-color: var(--primary); }
+
+/* Open Cloze */
+.open-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+.open-input:focus { border-color: var(--primary); }
+
+/* Footer Controls */
+.controls { display: flex; justify-content: space-between; margin-top: 20px; }
+.btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; padding: 12px 24px; border-radius: 9px; font-weight: 600; cursor: pointer; transition: transform 0.2s, opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+.btn.secondary:hover { background: #f8fafc; }
+
+/* Modals / Overlays */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 16px; }
+.modal { background: #fff; border-radius: 16px; width: 100%; max-width: 500px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+.modal h2 { margin-bottom: 12px; color: var(--secondary); }
+.modal p { margin-bottom: 12px; line-height: 1.5; color: var(--text-light); font-size: 0.95rem; }
+.modal ul { margin-left: 20px; margin-bottom: 16px; color: var(--text-light); font-size: 0.95rem; display: flex; flex-direction: column; gap: 6px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 0.9rem; }
+.form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
+.checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 0.9rem; color: var(--text-light); cursor: pointer; }
+
+/* Lock & Warning Screens */
+.warning-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 16px; }
+.warning-box { background: #fff; padding: 24px; border-radius: 16px; max-width: 400px; width: 100%; text-align: center; }
+.warning-box h3 { color: var(--danger); margin-bottom: 12px; }
+
+/* Submit view */
+.submit-card { text-align: center; }
+.submit-card h2 { font-size: 1.5rem; margin-bottom: 12px; color: var(--secondary); }
+.code-box { background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 16px 0; border: 1px dashed var(--border); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<script>
+// Mandatory self-check listener (must be first)
+window.addEventListener('message', function(ev){
+  var d = ev.data || {};
+  if (d.type !== 'SELFCHECK_BUILD') return;
+  try {
+    var code = buildSubmitCode(d.answers);
+    parent.postMessage({ type:'SELFCHECK_CODE', code: code }, '*');
+  } catch (err) {
+    parent.postMessage({ type:'SELFCHECK_ERROR', where:'student', msg:String(err) }, '*');
+  }
+});
+</script>
+
+<header>
+  <h1>LV Inter 0.1 - At school 1</h1>
+  <div id="timer" class="timer">15:00</div>
+</header>
+
+<main id="test-container" style="display:none;">
+  <div class="nav-bar" id="nav-bar"></div>
+  <div id="exercises-container"></div>
+  <div class="controls">
+    <button class="btn secondary" id="prev-btn" onclick="changeEx(-1)">Previous</button>
+    <button class="btn" id="next-btn" onclick="changeEx(1)">Next</button>
+  </div>
+</main>
+
+<!-- Intro Modal -->
+<div id="intro-modal" class="modal-overlay">
+  <div class="modal">
+    <h2>LV Inter 0.1 - At school 1</h2>
+    <p>📋 <strong>CO TĚ ČEKÁ:</strong></p>
+    <ul>
+      <li>3 cvičení: multiple choice (6), definitions to word (7), open cloze with first letter (7)</li>
+      <li>Celkem 20 otázek, 20 bodů</li>
+      <li>Časový limit: 15 minut</li>
+      <li>Známkování: 1 od 88 %, 2 od 74 %, 3 od 59 %, 4 od 44 %, 5 pod 44 %</li>
+    </ul>
+    <p>⛔ <strong>CO NENÍ DOVOLENO:</strong></p>
+    <ul>
+      <li>Prepínat na jiné záložky a aplikace</li>
+      <li>Dělit obrazovku a otevírat si nad testem jinou aplikaci</li>
+      <li>Kopírovat text z testu</li>
+      <li>Odchody z okna se počítají. Při 2. se test zamkne a odemkne ho jen vyučující.</li>
+    </ul>
+    <p>🏁 <strong>JAK TO SKONČÍ:</strong><br>Po odevzdání výsledek neuvidíš. Dostaneš odevzdávací kód, který odešleš podle pokynů vyučujícího. Známku se dozvíš později.</p>
+    
+    <div class="form-group">
+      <label class="checkbox-group">
+        <input type="checkbox" id="quiet-mode-check"> Zapni si režim Nerušit. Upozornění, která si během testu přečteš, se zaznamenávají.
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label for="student-name">Jméno / kód studenta (min. 3 znaky):</label>
+      <input type="text" id="student-name" class="form-input" placeholder="Zadej své jméno..." oninput="validateIntro()">
+    </div>
+
+    <button class="btn" id="start-btn" style="width: 100%;" disabled onclick="startTest()">Spustit test</button>
+  </div>
+</div>
+
+<!-- Warning / Lock Overlays container -->
+<div id="overlay-container"></div>
+
+<script>
+const TEST_ID = "LV Inter 0.1 - At school 1";
+const SUBMIT_SALT = "D7CBR3XTEF47";
+const UNLOCK_CODE = "74269";
+
+const testData = {
+ "nazev": "LV Inter 0.1 - At school 1",
+ "pokyny": "Answer all questions based on the vocabulary list from At school.",
+ "cviceni": [
+  {
+   "id": "c1",
+   "nadpis": "Multiple Choice",
+   "zadani": "Choose the correct option for each question.",
+   "typ": "choice",
+   "otazky": [
+    {"id": "c1q1", "text": "What do you do when a teacher asks you a question and you want to reply?", "body": 1, "moznosti": ["to answer", "to queue up for lunch", "to do homework", "to cross"]},
+    {"id": "c1q2", "text": "Where do students go to eat their lunch at school?", "body": 1, "moznosti": ["a tray", "a (school) canteen", "a school bell", "a chalkboard"]},
+    {"id": "c1q3", "text": "What is the UK term for the person who is the head of a school?", "body": 1, "moznosti": ["a teacher", "a student", "a volunteer", "a headmaster"]},
+    {"id": "c1q4", "text": "What do you do if you don't pass a test?", "body": 1, "moznosti": ["to excel", "to pass", "to fail", "to revise"]},
+    {"id": "c1q5", "text": "What do teachers use to write on a traditional black or green board?", "body": 1, "moznosti": ["a whiteboard marker", "a piece of chalk", "a lunch box", "an eraser"]},
+    {"id": "c1q6", "text": "What action describes losing your self-control and getting very angry?", "body": 1, "moznosti": ["to raise your hand", "to tuck in", "to lose your temper", "to hand out"]}
+   ]
+  },
+  {
+   "id": "c2",
+   "nadpis": "Definitions to Word",
+   "zadani": "Read the definition and select the correct word.",
+   "typ": "choice",
+   "otazky": [
+    {"id": "c2q1", "text": "A book used for written school exercises.", "body": 1, "moznosti": ["an exercise book", "a register", "a lesson timetable", "an essay"]},
+    {"id": "c2q2", "text": "A small box for carrying food to school.", "body": 1, "moznosti": ["a cabin", "a tray", "a chalkboard", "a lunch box"]},
+    {"id": "c2q3", "text": "To be very good at something.", "body": 1, "moznosti": ["to cheat", "to revise", "to excel", "to struggle"]},
+    {"id": "c2q4", "text": "A mark given to a student to show their performance.", "body": 1, "moznosti": ["a term", "a grade", "an assignment", "a degree"]},
+    {"id": "c2q5", "text": "To clean or remove writing from a whiteboard.", "body": 1, "moznosti": ["to tick", "to cross", "to wipe off", "to throw"]},
+    {"id": "c2q6", "text": "one of the periods into which a year is divided at school, college, or university.", "body": 1, "moznosti": ["a degree", "an internship", "a lesson", "a term"]},
+    {"id": "c2q7", "text": "To travel by getting free rides in passing vehicles.", "body": 1, "moznosti": ["to hitchhike", "to queue", "to argue", "to share"]}
+   ]
+  },
+  {
+   "id": "c3",
+   "nadpis": "Open Cloze (First Letter)",
+   "zadani": "Complete the missing word using the given first letter and context.",
+   "typ": "open",
+   "otazky": [
+    {"id": "c3q1", "text": "Please r___ your hand if you know the correct answer.", "body": 1},
+    {"id": "c3q2", "text": "We need to h___ in our homework by Friday morning.", "body": 1},
+    {"id": "c3q3", "text": "He was b___ for class because his bus was delayed.", "body": 1},
+    {"id": "c3q4", "text": "She had to s___ with math problems before the exam.", "body": 1},
+    {"id": "c3q5", "text": "The teacher used a marker on the w___ during the lesson.", "body": 1},
+    {"id": "c3q6", "text": "They got into trouble for throwing paper a___ in the classroom.", "body": 1},
+    {"id": "c3q7", "text": "It is important to r___ vocabulary before taking a big test.", "body": 1}
+   ]
+  }
+]};
+
+let state = {
+  started: false,
+  submitted: false,
+  studentName: "",
+  sessionId: 'sess_' + Math.random().toString(36).substr(2, 9),
+  startTime: null,
+  endTime: null,
+  answers: {},
+  currentEx: 0,
+  timeLeft: 15 * 60,
+  focusEvents: [],
+  blurCount: 0,
+  unlockCount: 0,
+  locked: false
+};
+
+// Safe storage wrapper
+const storage = {
+  get(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch(e) {} },
+  remove(k) { try { localStorage.removeItem(k); } catch(e) {} }
+};
+
+function cyrb53(str, seed = 0) {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36).toUpperCase();
+}
+
+function base64UrlEncode(str) {
+  return btoa(unescape(encodeURIComponent(str))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function buildSubmitCode(ansMap) {
+  let payload = {
+    v: 1,
+    t: TEST_ID,
+    n: state.studentName,
+    s: state.startTime ? new Date(state.startTime).toISOString() : new Date().toISOString(),
+    e: state.endTime ? new Date(state.endTime).toISOString() : new Date().toISOString(),
+    d: state.startTime ? Math.floor((Date.now() - state.startTime) / 1000) : 0,
+    a: ansMap,
+    x: {
+      c: state.blurCount,
+      s: state.focusEvents.reduce((acc, curr) => acc + curr.d, 0),
+      e: state.focusEvents
+    },
+    o: state.unlockCount
+  };
+  let jsonStr = JSON.stringify(payload);
+  let b64 = base64UrlEncode(jsonStr);
+  let hash = cyrb53(b64 + SUBMIT_SALT);
+  return `TST1.${b64}.${hash}`;
+}
+
+function validateIntro() {
+  let name = document.getElementById('student-name').value.trim();
+  document.getElementById('start-btn').disabled = name.length < 3;
+}
+
+function startTest() {
+  let nameInput = document.getElementById('student-name').value.trim();
+  if(nameInput.length < 3) return;
+  state.studentName = nameInput;
+  state.started = true;
+  state.startTime = Date.now();
+  document.getElementById('intro-modal').style.display = 'none';
+  document.getElementById('test-container').style.display = 'block';
+  initTest();
+  saveState();
+  setInterval(updateTimer, 1000);
+  initSecurity();
+}
+
+function initTest() {
+  let navBar = document.getElementById('nav-bar');
+  let exContainer = document.getElementById('exercises-container');
+  navBar.innerHTML = '';
+  exContainer.innerHTML = '';
+
+  testData.cviceni.forEach((ex, idx) => {
+    // Nav btn
+    let btn = document.createElement('button');
+    btn.className = 'nav-btn' + (idx === 0 ? ' active' : '') + (isExComplete(ex.id) ? ' completed' : '');
+    btn.innerText = (idx + 1) + '. ' + ex.nadpis;
+    btn.onclick = () => switchEx(idx);
+    navBar.appendChild(btn);
+
+    // Card
+    let card = document.createElement('div');
+    card.className = 'card' + (idx === 0 ? ' active' : '');
+    card.id = 'ex-card-' + idx;
+    
+    let html = `<h2>${ex.nadpis}</h2><p class="instruction">${ex.zadani}</p>`;
+    
+    ex.otazky.forEach(q => {
+      html += `<div class="question" data-qid="${q.id}">`;
+      html += `<div class="question-text">${q.text}</div>`;
+      if(ex.typ === 'choice') {
+        html += `<div class="options">`;
+        q.moznosti.forEach(m => {
+          let checked = state.answers[q.id] === m ? 'checked' : '';
+          html += `<label class="option-label"><input type="radio" name="${q.id}" value="${escapeHtml(m)}" ${checked} onchange="saveAnswer('${q.id}', this.value)"> ${escapeHtml(m)}</label>`;
+        });
+        html += `</div>`;
+      } else if(ex.typ === 'open') {
+        let val = state.answers[q.id] || '';
+        html += `<input type="text" class="open-input" value="${escapeHtml(val)}" placeholder="Type your answer..." oninput="saveAnswer('${q.id}', this.value)">`;
+      }
+      html += `</div>`;
+    });
+
+    card.innerHTML = html;
+    exContainer.appendChild(card);
+  });
+  updateNavButtons();
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function switchEx(idx) {
+  state.currentEx = idx;
+  document.querySelectorAll('.card').forEach((c, i) => {
+    c.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+  document.getElementById('prev-btn').style.display = idx === 0 ? 'none' : 'inline-flex';
+  document.getElementById('next-btn').innerText = idx === testData.cviceni.length - 1 ? 'Submit Test' : 'Next';
+}
+
+function changeEx(dir) {
+  let next = state.currentEx + dir;
+  if(next >= testData.cviceni.length) {
+    confirmSubmit();
+  } else if(next >= 0) {
+    switchEx(next);
+  }
+}
+
+function saveAnswer(qid, val) {
+  state.answers[qid] = val.trim();
+  updateNavButtons();
+  saveState();
+}
+
+function isExComplete(exId) {
+  let ex = testData.cviceni.find(e => e.id === exId);
+  return ex.otazky.every(q => state.answers[q.id] && state.answers[q.id].length > 0);
+}
+
+function updateNavButtons() {
+  testData.cviceni.forEach((ex, idx) => {
+    let btn = document.querySelectorAll('.nav-btn')[idx];
+    if(btn) {
+      if(isExComplete(ex.id)) {
+        btn.classList.add('completed');
+      } else {
+        btn.classList.remove('completed');
+      }
+    }
+  });
+}
+
+function updateTimer() {
+  if(!state.started || state.submitted || state.locked) return;
+  state.timeLeft--;
+  let m = Math.floor(state.timeLeft / 60);
+  let s = state.timeLeft % 60;
+  let timerEl = document.getElementById('timer');
+  timerEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+  if(state.timeLeft <= 300) {
+    timerEl.classList.add('blink');
+  }
+  if(state.timeLeft <= 0) {
+    submitTest();
+  }
+  saveState();
+}
+
+function confirmSubmit() {
+  let uncompleted = testData.cviceni.some(ex => !isExComplete(ex.id));
+  if(uncompleted) {
+    if(!confirm("Některá cvičení nejsou zcela vyplněna. Chceš přesto test odevzdat?")) return;
+  } else {
+    if(!confirm("Opravdu chceš odevzdat test?")) return;
+  }
+  submitTest();
+}
+
+function submitTest() {
+  if(state.submitted) return;
+  state.submitted = true;
+  state.endTime = Date.now();
+  saveState();
+
+  let totalQ = 0;
+  let answeredQ = 0;
+  testData.cviceni.forEach(ex => {
+    ex.otazky.forEach(q => {
+      totalQ++;
+      if(state.answers[q.id] && state.answers[q.id].length > 0) answeredQ++;
+    });
+  });
+
+  let code = buildSubmitCode(state.answers);
+
+  let container = document.getElementById('test-container');
+  container.innerHTML = `
+    <div class="card active submit-card">
+      <h2>Test Submitted Successfully</h2>
+      <p>Jméno: <strong>${escapeHtml(state.studentName)}</strong></p>
+      <p>Test ID: ${TEST_ID}</p>
+      <p>Zodpovězeno otázek: ${answeredQ} / ${totalQ}</p>
+      <div class="code-box" id="submit-code">${code}</div>
+      <button class="btn" onclick="copyCode()">Kopírovat odevzdávací kód</button>
+      <p style="margin-top: 16px;">Výsledky ti sdělí vyučující.</p>
+    </div>
+  `;
+}
+
+function copyCode() {
+  let code = document.getElementById('submit-code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    alert("Odevzdávací kód byl zkopírován do schránky.");
+  });
+}
+
+// Security & Surveillance
+function initSecurity() {
+  // Block keys
+  document.addEventListener('keydown', e => {
+    if(e.key === 'F12' || (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P' || (e.shiftKey && e.key === 'I')))) {
+      e.preventDefault();
+      recordViolation('keys');
+    }
+  });
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // Visibility / Blur detection
+  let lastFrameTime = performance.now();
+  function checkLoop() {
+    if(state.started && !state.submitted && !state.locked) {
+      let now = performance.now();
+      let diff = now - lastFrameTime;
+      // Detector 3: Render freeze (e.g. iPad slide over)
+      if(diff > 2000 && document.visibilityState === 'visible') {
+        triggerViolation('fokus', Math.floor(diff/1000));
+      }
+      lastFrameTime = now;
+    }
+    requestAnimationFrame(checkLoop);
+  }
+  requestAnimationFrame(checkLoop);
+
+  setInterval(() => {
+    if(!state.started || state.submitted || state.locked) return;
+    // Detector 1: visibility visible but no focus
+    if(document.visibilityState === 'visible' && !document.hasFocus()) {
+      // counted if continuous
+    }
+  }, 1000);
+
+  window.addEventListener('blur', () => {
+    if(state.started && !state.submitted && !state.locked) {
+      triggerViolation('zalozka', 1);
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden && state.started && !state.submitted && !state.locked) {
+      triggerViolation('zalozka', 1);
+    }
+  });
+
+  // Resize / Split screen detection (Detector 2)
+  let baseW = window.innerWidth;
+  let baseH = window.innerHeight;
+  setTimeout(() => { baseW = window.innerWidth; baseH = window.innerHeight; }, 1000);
+
+  window.addEventListener('resize', () => {
+    if(!state.started || state.submitted || state.locked) return;
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    if(w < baseW * 0.85) {
+      triggerViolation('split', 2);
+    }
+  });
+}
+
+function recordViolation(type) {
+  state.blurCount++;
+  state.focusEvents.push({ t: Math.floor((Date.now() - state.startTime)/1000), d: 1, k: type });
+  handleViolationAction();
+}
+
+function triggerViolation(type, duration) {
+  state.blurCount++;
+  state.focusEvents.push({ t: Math.floor((Date.now() - state.startTime)/1000), d: duration, k: type });
+  handleViolationAction();
+}
+
+function handleViolationAction() {
+  if(state.blurCount === 1) {
+    showWarningOverlay(`Opustil jsi okno testu (1 z 2). Při dalším odchodu se test zamkne.`);
+  } else if(state.blurCount >= 2) {
+    lockTest();
+  }
+  saveState();
+}
+
+function showWarningOverlay(msg) {
+  let container = document.getElementById('overlay-container');
+  container.innerHTML = `
+    <div class="warning-overlay">
+      <div class="warning-box">
+        <h3>Upozornění</h3>
+        <p style="margin-bottom:16px;">${msg}</p>
+        <button class="btn" onclick="closeWarning()">Pokračovat</button>
+      </div>
+    </div>
+  `;
+}
+
+function closeWarning() {
+  document.getElementById('overlay-container').innerHTML = '';
+}
+
+function lockTest() {
+  state.locked = true;
+  let container = document.getElementById('overlay-container');
+  container.innerHTML = `
+    <div class="warning-overlay">
+      <div class="warning-box">
+        <h3>🔒 Test je zamčený</h3>
+        <p style="margin-bottom:16px;">Zavolej vyučujícího.</p>
+        <div class="form-group">
+          <input type="password" id="unlock-input" class="form-input" placeholder="Odemykací kód vyučujícího">
+        </div>
+        <button class="btn" onclick="tryUnlock()">Odemknout</button>
+      </div>
+    </div>
+  `;
+  saveState();
+}
+
+function tryUnlock() {
+  let val = document.getElementById('unlock-input').value;
+  if(val === UNLOCK_CODE) {
+    state.locked = false;
+    state.blurCount = 0; // reset counter after unlock
+    state.unlockCount++;
+    document.getElementById('overlay-container').innerHTML = '';
+    saveState();
+    alert("Test byl odemčen.");
+  } else {
+    alert("Chybný kód.");
+  }
+}
+
+function saveState() {
+  storage.set('lv_test_state', JSON.stringify(state));
+}
+
+function loadState() {
+  let saved = storage.get('lv_test_state');
+  if(saved) {
+    try {
+      let parsed = JSON.parse(saved);
+      if(parsed && parsed.started && !parsed.submitted) {
+        state = parsed;
+        document.getElementById('intro-modal').style.display = 'none';
+        document.getElementById('test-container').style.display = 'block';
+        initTest();
+        if(state.locked) {
+          lockTest();
+        }
+        setInterval(updateTimer, 1000);
+        initSecurity();
+      }
+    } catch(e) {}
+  }
+}
+
+window.onload = loadState;
+</script>
+</body>
+</html>
