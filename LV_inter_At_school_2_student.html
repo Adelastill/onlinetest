@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LV inter - At school 2</title>
+<style>
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-color: #f4f6f9;
+  --card-bg: #ffffff;
+  --text-color: #2d3748;
+  --text-muted: #718096;
+  --border-color: #e2e8f0;
+  --accent: #667eea;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+body { background: var(--bg-color); color: var(--text-color); line-height: 1.5; padding: 0; display: flex; flex-direction: column; min-height: 100vh; user-select: none; -webkit-user-select: none; }
+
+header {
+  background: var(--primary-gradient);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 0 0 16px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+header h1 { font-size: 1.25rem; font-weight: 700; }
+.timer { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+.timer.warning { background: var(--danger); animation: pulse 1s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+main { flex: 1; max-width: 800px; width: 100%; margin: 24px auto; padding: 0 16px; }
+
+/* Intro screen */
+.screen { display: none; }
+.screen.active { display: block; }
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+.intro-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 16px; color: #1a202c; }
+.intro-section { margin-bottom: 20px; }
+.intro-section h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px; }
+.intro-list { list-style: none; }
+.intro-list li { margin-bottom: 6px; position: relative; padding-left: 20px; }
+.intro-list li::before { content: "•"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 8px; }
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+.form-control:focus { outline: none; border-color: var(--accent); }
+
+/* Navigation bar for exercises */
+.ex-nav-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+.ex-nav-btn {
+  background: white;
+  border: 1.5px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.ex-nav-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.ex-nav-btn .badge {
+  background: var(--border-color);
+  color: var(--text-color);
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+.ex-nav-btn.active .badge { background: rgba(255,255,255,0.3); color: white; }
+.ex-nav-btn.completed .badge { background: var(--success); color: white; }
+
+/* Exercise panel */
+.exercise-panel { display: none; }
+.exercise-panel.active { display: block; }
+.exercise-header { margin-bottom: 20px; }
+.exercise-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+.exercise-instructions { color: var(--text-muted); font-size: 0.95rem; }
+
+.question-card {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.question-text { font-weight: 600; margin-bottom: 12px; }
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 600px) { .options-grid { grid-template-columns: 1fr; } }
+
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1px solid var(--border-color);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.option-label:hover { border-color: var(--accent); background: #f0f4ff; }
+.option-label input { accent-color: var(--accent); }
+.option-label.selected { background: #e0e7ff; border-color: var(--accent); font-weight: 600; }
+
+.open-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+}
+.open-input:focus { outline: none; border-color: var(--accent); }
+
+/* Buttons */
+.btn {
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+.btn-secondary {
+  background: white;
+  color: var(--text-color);
+  border: 1.5px solid var(--border-color);
+}
+.btn-secondary:hover { background: #f8fafc; border-color: var(--text-muted); box-shadow: none; }
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+/* Submit screen */
+.submit-screen textarea {
+  width: 100%;
+  height: 100px;
+  background: #141824;
+  color: #e8eaf2;
+  border: 1.5px solid #3a3f52;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  resize: none;
+  margin-bottom: 12px;
+}
+.submit-info {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+}
+.submit-info p { margin-bottom: 8px; }
+.submit-info p:last-child { margin-bottom: 0; }
+.qr-container { display: flex; justify-content: center; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LV inter - At school 2</h1>
+  <div id="timer" class="timer">15:00</div>
+</header>
+
+<main>
+  <!-- INTRO SCREEN -->
+  <div id="screen-intro" class="screen active">
+    <div class="card">
+      <h2 class="intro-title">LV inter - At school 2</h2>
+      
+      <div class="intro-section">
+        <h3>📋 Co tě čeká</h3>
+        <ul class="intro-list">
+          <li>Celkem 20 otázek, 20 bodů</li>
+          <li>Časový limit: 15 minut</li>
+        </ul>
+      </div>
+
+      <div class="intro-section">
+        <h3>⛔ Co není dovoleno</h3>
+        <ul class="intro-list">
+          <li>Přepínat na jiné záložky a aplikace</li>
+          <li>Dělit obrazovku a otevírat si nad testem jinou aplikaci</li>
+          <li>Kopírovat text z testu</li>
+          <li>Odchody z okna se počítají. Při 2. se test zamkne a odemkne ho jen vyučující.</li>
+        </ul>
+      </div>
+
+      <div class="intro-section">
+        <h3>🏁 Jak to skončí</h3>
+        <p style="font-size: 0.95rem; color: var(--text-color);">Po odevzdání výsledek neuvidíš. Dostaneš odevzdávací kód, který odešleš podle pokynů vyučujícího. Známku se dozvíš později.</p>
+      </div>
+
+      <div class="form-group" style="margin-top: 24px;">
+        <label for="student-name">Jméno / kód studenta:</label>
+        <input type="text" id="student-name" class="form-control" placeholder="Zadej své jméno..." autocomplete="off">
+      </div>
+
+      <button id="btn-start" class="btn" style="width: 100%;" disabled>Spustit test</button>
+    </div>
+  </div>
+
+  <!-- TEST SCREEN -->
+  <div id="screen-test" class="screen">
+    <div class="ex-nav-bar" id="ex-nav-bar"></div>
+
+    <div class="card">
+      <div id="exercises-container"></div>
+
+      <div class="nav-buttons">
+        <button id="btn-prev" class="btn btn-secondary">Předchozí</button>
+        <button id="btn-next" class="btn">Další</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT SCREEN -->
+  <div id="screen-submit" class="screen">
+    <div class="card submit-screen">
+      <h2 class="intro-title" style="font-size: 1.5rem;">Test odevzdán</h2>
+      
+      <div class="submit-info" id="submit-summary">
+        <!-- Dynamic info -->
+      </div>
+
+      <div class="form-group">
+        <label>Odevzdávací kód:</label>
+        <textarea id="submit-code" readonly></textarea>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <button id="btn-copy" class="btn" style="flex: 1;">Zkopírovat odevzdávací kód</button>
+          <button id="btn-download" class="btn btn-secondary" style="flex: 1;">Stáhnout jako .txt</button>
+        </div>
+      </div>
+
+      <div style="text-align: center; border-top: 1px solid var(--border-color); padding-top: 20px;">
+        <p style="font-size: 0.9rem; margin-bottom: 12px;">Vlož kód do formuláře a odešli. Bez odeslání se test nepočítá.</p>
+        <a id="google-form-link" href="https://docs.google.com/forms/d/e/1FAIpQLScLRY_E78LJIYfolj3YcFkm4UB4d--vRbrVZpGxhAYHdZMWTQ/viewform?usp=pp_url&entry.1520169381=LV+Inter+0.1+-+At+school+2&entry.1323556300=5B8+sk.1" target="_blank" class="btn" style="background: #2563eb; width: 100%; margin-bottom: 16px;">Otevřít odevzdávací formulář</a>
+        <div class="qr-container" id="qr-code-svg"></div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 16px;">Výsledky ti sdělí vyučující.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Mandatory Selfcheck listener setup first
+window.addEventListener('message', function(ev){
+  var d = ev.data || {};
+  if (d.type !== 'SELFCHECK_BUILD') return;
+  try {
+    var code = buildSubmitCode(d.answers);
+    parent.postMessage({ type:'SELFCHECK_CODE', code: code }, '*');
+  } catch (err) {
+    parent.postMessage({ type:'SELFCHECK_ERROR', where:'student', msg:String(err) }, '*');
+  }
+});
+
+// SUBMIT_SALT and TestID constants
+const SUBMIT_SALT = "CYFHYC5YF9PX";
+const TEST_ID = "LV inter - At school 2";
+
+// Cyrb53 implementation
+function cyrb53(str, seed = 0) {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+
+function base64UrlEncode(str) {
+  return btoa(unescape(encodeURIComponent(str))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+// Test Data
+const testData = {
+ "nazev": "LV inter - At school 2",
+ "pokyny": "Complete all exercises carefully based on the provided school vocabulary.",
+ "cviceni": [
+  {
+   "id": "c1",
+   "nadpis": "Multiple Choice",
+   "zadani": "Choose the correct option to complete each sentence or definition.",
+   "typ": "choice",
+   "otazky": [
+    { "id": "c1q1", "text": "When a student cannot solve a task easily, we say they ___ with something.", "body": 1, "moznosti": ["excel", "mark", "cheat", "struggle"] },
+    { "id": "c1q2", "text": "The teacher uses a whiteboard ___ to write or draw on the modern board.", "body": 1, "moznosti": ["chalkboard", "whistle", "marker", "rubber"] },
+    { "id": "c1q3", "text": "Before leaving the classroom, students should always ___ their chair.", "body": 1, "moznosti": ["tuck in", "lean back", "queue up", "call out"] },
+    { "id": "c1q4", "text": "If a class is very noisy and out of control, it is described as a ___ class.", "body": 1, "moznosti": ["sustainable", "rowdy", "physical", "sedentary"] },
+    { "id": "c1q5", "text": "A period of unpaid work experience during or after studies is called an unpaid ___.", "body": 1, "moznosti": ["detention", "assignment", "timetable", "internship"] },
+    { "id": "c1q6", "text": "When you want to show that you know the answer in class, you ___ your hand.", "body": 1, "moznosti": ["raise", "tick", "cross", "throw"] }
+   ]
+  },
+  {
+   "id": "c2",
+   "nadpis": "Definition to Word",
+   "zadani": "Read the short definition and choose the exact matching word.",
+   "typ": "choice",
+   "otazky": [
+    { "id": "c2q1", "text": "A school punishment where you must stay after school hours.", "body": 1, "moznosti": ["detention", "register", "timetable", "canteen"] },
+    { "id": "c2q2", "text": "The feeling of claustrophobia or irritation from being stuck in one place.", "body": 1, "moznosti": ["network", "progress", "cabin fever", "immersion"] },
+    { "id": "c2q3", "text": "A person who is the head of a school (UK term).", "body": 1, "moznosti": ["teacher", "principal", "student", "headmaster"] },
+    { "id": "c2q4", "text": "A small box used to carry food from home to school for a meal.", "body": 1, "moznosti": ["tray", "lunch box", "paper aeroplane", "exercise book"] },
+    { "id": "c2q5", "text": "Physical exercise or movement that is very demanding on the body.", "body": 1, "moznosti": ["monotonous", "physically demanding", "sustainable", "unplugged"] },
+    { "id": "c2q6", "text": "The official book where student attendance and names are recorded.", "body": 1, "moznosti": ["assignment", "essay", "register", "timetable"] }
+   ]
+  },
+  {
+   "id": "c3",
+   "nadpis": "Open Cloze (First Letter)",
+   "zadani": "Complete the missing word in each sentence using the given first letter and context.",
+   "typ": "open",
+   "otazky": [
+    { "id": "c3q1", "text": "Make sure you do your h___ every evening before watching TV.", "body": 1, "moznosti": [] },
+    { "id": "c3q2", "text": "The school b___ rang loudly to signal the end of the lesson.", "body": 1, "moznosti": [] },
+    { "id": "c3q3", "text": "She wrote her answers neatly in her e _____ book.", "body": 1, "moznosti": [] },
+    { "id": "c3q4", "text": "If you don't study hard enough, you might f___ the test.", "body": 1, "moznosti": [] },
+    { "id": "c3q5", "text": "He tried to c___ during the exam by looking at his classmate's paper.", "body": 1, "moznosti": [] },
+    { "id": "c3q6", "text": "The students ate their lunch together in the school c___.", "body": 1, "moznosti": [] },
+    { "id": "c3q7", "text": "Building professional connections with other people is known as n___.", "body": 1, "moznosti": [] },
+    { "id": "c3q8", "text": "Travel without using modern electronic devices or technology is called going u___.", "body": 1, "moznosti": [] }
+   ]
+  }
+ ]
+};
+
+// App State
+let state = {
+  name: "",
+  startTime: null,
+  endTime: null,
+  answers: {},
+  currentExIndex: 0,
+  timerInterval: null,
+  timeLeft: 900
+};
+
+// DOM Elements
+const nameInput = document.getElementById('student-name');
+const btnStart = document.getElementById('btn-start');
+const screenIntro = document.getElementById('screen-intro');
+const screenTest = document.getElementById('screen-test');
+const screenSubmit = document.getElementById('screen-submit');
+const timerEl = document.getElementById('timer');
+const exNavBar = document.getElementById('ex-nav-bar');
+const exercisesContainer = document.getElementById('exercises-container');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
+nameInput.addEventListener('input', () => {
+  btnStart.disabled = nameInput.value.trim().length < 3;
+});
+
+btnStart.addEventListener('click', () => {
+  const name = nameInput.value.trim();
+  if (name.length < 3) return;
+  state.name = name;
+
+  // Relace init
+  try {
+    if (window.Relace) {
+      Relace.nastav({ onNovyPokus: function (p) { location.reload(); } });
+      var r = Relace.zahaj(name);
+      if (!r.spustit) return;
+      if (r.stav === 'probiha' && r.odpovedi) {
+        state.answers = r.odpovedi;
+      }
+      state.timeLeft = r.zbyva;
+    }
+  } catch(e) {}
+
+  if (state.timeLeft <= 0) {
+    alert("Time is up!");
+    return;
+  }
+
+  screenIntro.classList.remove('active');
+  screenTest.classList.add('active');
+  state.startTime = new Date().toISOString();
+
+  try { if (window.Dohled) Dohled.start(); } catch(e) {}
+
+  renderTest();
+  startTimer();
+});
+
+function startTimer() {
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimerDisplay();
+    if (state.timeLeft <= 300) {
+      timerEl.classList.add('warning');
+    }
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(state.timeLeft / 60);
+  const s = state.timeLeft % 60;
+  timerEl.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function renderTest() {
+  // Render Navigation Bar
+  exNavBar.innerHTML = '';
+  testData.cviceni.forEach((ex, idx) => {
+    const btn = document.createElement('button');
+    btn.className = `ex-nav-btn ${idx === state.currentExIndex ? 'active' : ''}`;
+    
+    // Check if completed
+    const totalQ = ex.otazky.length;
+    const answeredQ = ex.otazky.filter(q => state.answers[q.id] && String(state.answers[q.id]).trim() !== '').length;
+    if (answeredQ === totalQ) btn.classList.add('completed');
+
+    btn.innerHTML = `${ex.nadpis} <span class="badge">${answeredQ}/${totalQ}</span>`;
+    btn.onclick = () => { switchExercise(idx); };
+    exNavBar.appendChild(btn);
+  });
+
+  // Render Exercises
+  exercisesContainer.innerHTML = '';
+  testData.cviceni.forEach((ex, idx) => {
+    const panel = document.createElement('div');
+    panel.className = `exercise-panel ${idx === state.currentExIndex ? 'active' : ''}`;
+    
+    let html = `
+      <div class="exercise-header">
+        <h3 class="exercise-title">${ex.nadpis}</h3>
+        <p class="exercise-instructions">${ex.zadani}</p>
+      </div>
+    `;
+
+    ex.otazky.forEach((q, qIdx) => {
+      html += `<div class="question-card">`;
+      html += `<div class="question-text">${qIdx + 1}. ${q.text}</div>`;
+
+      if (ex.typ === 'choice') {
+        html += `<div class="options-grid">`;
+        q.moznosti.forEach(opt => {
+          const isSelected = state.answers[q.id] === opt;
+          html += `
+            <label class="option-label ${isSelected ? 'selected' : ''}">
+              <input type="radio" name="${q.id}" value="${opt}" ${isSelected ? 'checked' : ''} onchange="saveAnswer('${q.id}', '${opt.replace(/'/g, "\\'")}')">
+              <span>${opt}</span>
+            </label>
+          `;
+        });
+        html += `</div>`;
+      } else if (ex.typ === 'open') {
+        const val = state.answers[q.id] || '';
+        html += `<input type="text" class="open-input" value="${val}" placeholder="Type your answer..." oninput="saveAnswer('${q.id}', this.value)">`;
+      }
+
+      html += `</div>`;
+    });
+
+    panel.innerHTML = html;
+    exercisesContainer.appendChild(panel);
+  });
+
+  btnPrev.style.display = state.currentExIndex === 0 ? 'none' : 'inline-flex';
+  btnNext.textContent = state.currentExIndex === testData.cviceni.length - 1 ? 'Odevzdat test' : 'Další';
+}
+
+function switchExercise(idx) {
+  state.currentExIndex = idx;
+  renderTest();
+}
+
+btnPrev.onclick = () => {
+  if (state.currentExIndex > 0) {
+    state.currentExIndex--;
+    renderTest();
+  }
+};
+
+btnNext.onclick = () => {
+  if (state.currentExIndex < testData.cviceni.length - 1) {
+    state.currentExIndex++;
+    renderTest();
+  } else {
+    // Check incomplete
+    let totalQuestions = 0;
+    let answeredQuestions = 0;
+    testData.cviceni.forEach(ex => {
+      ex.otazky.forEach(q => {
+        totalQuestions++;
+        if (state.answers[q.id] && String(state.answers[q.id]).trim() !== '') answeredQuestions++;
+      });
+    });
+
+    if (answeredQuestions < totalQuestions) {
+      if (!confirm("Některé otázky nejsou zodpovězené. Chceš test přesto odevzdat?")) return;
+    }
+    submitTest();
+  }
+};
+
+window.saveAnswer = function(qId, val) {
+  state.answers[qId] = val;
+  try { if (window.Relace) Relace.uloz(state.answers); } catch(e) {}
+  renderTest(); // update nav badge count instantly
+};
+
+function buildSubmitCode(answersMap) {
+  const endTime = new Date().toISOString();
+  const duration = Math.round((new Date(endTime).getTime() - new Date(state.startTime || endTime).getTime()) / 1000);
+  
+  let telemetry = { c: 0, s: 0, e: [] };
+  try { if (window.Dohled) telemetry = Dohled.telemetrie(); } catch(e) {}
+
+  const payload = {
+    v: 1,
+    t: TEST_ID,
+    n: state.name,
+    s: state.startTime || endTime,
+    e: endTime,
+    d: duration,
+    a: answersMap || state.answers,
+    x: telemetry,
+    o: telemetry.o || 0
+  };
+
+  const jsonStr = JSON.stringify(payload);
+  const b64 = base64UrlEncode(jsonStr);
+  const hash = cyrb53(b64 + SUBMIT_SALT).toUpperCase();
+  return `TST1.${b64}.${hash}`;
+}
+
+function submitTest() {
+  clearInterval(state.timerInterval);
+  try { if (window.Dohled) Dohled.stop(); } catch(e) {}
+
+  screenTest.classList.remove('active');
+  screenSubmit.classList.add('active');
+
+  let totalQ = 0;
+  let answeredQ = 0;
+  testData.cviceni.forEach(ex => {
+    ex.otazky.forEach(q => {
+      totalQ++;
+      if (state.answers[q.id] && String(state.answers[q.id]).trim() !== '') answeredQ++;
+    });
+  });
+
+  const code = buildSubmitCode(state.answers);
+  try { if (window.Relace) Relace.dokonci(code); } catch(e) {}
+
+  document.getElementById('submit-summary').innerHTML = `
+    <p><strong>Jméno:</strong> ${escapeHtml(state.name)}</p>
+    <p><strong>Test ID:</strong> ${TEST_ID}</p>
+    <p><strong>Zodpovězeno otázek:</strong> ${answeredQ} / ${totalQ}</p>
+  `;
+
+  document.getElementById('submit-code').value = code;
+
+  document.getElementById('btn-copy').onclick = () => {
+    const ta = document.getElementById('submit-code');
+    ta.select();
+    document.execCommand('copy');
+    document.getElementById('btn-copy').textContent = 'Zkopírováno!';
+  };
+
+  document.getElementById('btn-download').onclick = () => {
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TEST_${TEST_ID}_${state.name.replace(/\s+/g, '_')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Generate offline SVG QR code mockup / simple fallback block
+  generateSimpleQR("https://docs.google.com/forms/d/e/1FAIpQLScLRY_E78LJIYfolj3YcFkm4UB4d--vRbrVZpGxhAYHdZMWTQ/viewform?usp=pp_url&entry.1520169381=LV+Inter+0.1+-+At+school+2&entry.1323556300=5B8+sk.1");
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function generateSimpleQR(url) {
+  // Simple visual SVG box representing QR code placeholder since no external CDN is allowed
+  const container = document.getElementById('qr-code-svg');
+  container.innerHTML = `
+    <div style="background: white; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; display: inline-block;">
+      <svg width="120" height="120" viewBox="0 0 25 25" style="display: block;">
+        <rect width="25" height="25" fill="#fff"/>
+        <path d="M0,0h7v7H0z M2,2v3h3V2z M18,0h7v7H18z M20,2v3h3V2z M0,18h7v7H0z M2,20v3h3V20z" fill="#000"/>
+        <rect x="9" y="2" width="3" height="3" fill="#000"/>
+        <rect x="14" y="2" width="2" height="2" fill="#000"/>
+        <rect x="9" y="8" width="7" height="2" fill="#000"/>
+        <rect x="2" y="9" width="3" height="3" fill="#000"/>
+        <rect x="8" y="12" width="3" height="3" fill="#000"/>
+        <rect x="13" y="10" width="4" height="4" fill="#000"/>
+        <rect x="19" y="10" width="4" height="5" fill="#000"/>
+        <rect x="2" y="15" width="2" height="4" fill="#000"/>
+        <rect x="8" y="17" width="5" height="4" fill="#000"/>
+        <rect x="15" y="17" width="3" height="3" fill="#000"/>
+        <rect x="20" y="18" width="4" height="4" fill="#000"/>
+        <rect x="10" y="22" width="4" height="2" fill="#000"/>
+      </svg>
+      <div style="font-size: 10px; color: #666; margin-top: 4px; text-align: center;">QR Form Link</div>
+    </div>
+  `;
+}
+</script>
+
+<script>
+// Relace Module
+(function () {
+  'use strict';
+  if (window.Relace) return;
+
+  var cfg = { testId: 'LV inter - At school 2', kod: '74269', rezim: 'JEDNOU', limit: 900, kodHodiny: '' };
+
+  function otisk(t) {
+    t = String(t == null ? '' : t).trim().toLowerCase();
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57, ch;
+    for (var i = 0; i < t.length; i++) {
+      ch = t.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  var zaznam = null, klic = '', hotovoVrstva = null, onNovy = null;
+
+  function cti(k) {
+    try { var v = window.localStorage.getItem(k); if (v != null) return v; } catch (e) {}
+    try { var v2 = window.sessionStorage.getItem(k); if (v2 != null) return v2; } catch (e) {}
+    try {
+      var m = document.cookie.match(new RegExp('(?:^|; )' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)'));
+      return m ? decodeURIComponent(m[1]) : null;
+    } catch (e) {}
+    return null;
+  }
+  function zapis(k, v) {
+    try { window.localStorage.setItem(k, v); } catch (e) {}
+    try { window.sessionStorage.setItem(k, v); } catch (e) {}
+    try { document.cookie = k + '=' + encodeURIComponent(v) + ';path=/;max-age=15552000'; } catch (e) {}
+  }
+  function smaz(k) {
+    try { window.localStorage.removeItem(k); } catch (e) {}
+    try { window.sessionStorage.removeItem(k); } catch (e) {}
+    try { document.cookie = k + '=;path=/;max-age=0'; } catch (e) {}
+  }
+
+  function normJmeno(j) {
+    return String(j || '').trim().toLowerCase().replace(/\s+/g, ' ')
+      .normalize ? String(j || '').trim().toLowerCase().replace(/\s+/g, ' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      : String(j || '').trim().toLowerCase();
+  }
+  function klicPro(jmeno) { return 'relace:' + cfg.testId + ':' + normJmeno(jmeno); }
+  function klicZarizeni() { return 'relace:' + cfg.testId + ':__zarizeni__'; }
+  function nactiZarizeni() {
+    var raw = cti(klicZarizeni());
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  function ulozZarizeni(jmeno) {
+    zapis(klicZarizeni(), JSON.stringify({ jmeno: jmeno, kdy: new Date().toISOString() }));
+  }
+
+  function nacti(jmeno) {
+    var raw = cti(klicPro(jmeno));
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  function uloz() {
+    if (!zaznam || !klic) return;
+    zapis(klic, JSON.stringify(zaznam));
+  }
+
+  function zbyva() {
+    if (!zaznam || !zaznam.start) return cfg.limit;
+    var ubehlo = Math.floor((Date.now() - new Date(zaznam.start).getTime()) / 1000);
+    return Math.max(0, cfg.limit - ubehlo);
+  }
+
+  window.Relace = {
+    nastav: function (o) {
+      o = o || {};
+      if (o.limit) cfg.limit = o.limit;
+      if (o.kod) cfg.kod = o.kod;
+      onNovy = o.onNovyPokus || null;
+    },
+    zahaj: function (jmeno) {
+      klic = klicPro(jmeno);
+      var d = nacti(jmeno);
+      if (cfg.rezim === 'VOLNE') {
+        zaznam = { jmeno: jmeno, start: new Date().toISOString(), odpovedi: {}, pokus: (d && d.pokus || 0) + 1 };
+        uloz();
+        return { spustit: true, stav: 'novy', zbyva: cfg.limit, pokus: zaznam.pokus };
+      }
+      if (cfg.rezim === 'JEDNOU') {
+        var zar = nactiZarizeni();
+        if (zar && normJmeno(zar.jmeno) !== normJmeno(jmeno)) {
+          return { spustit: false, stav: 'blokovano' };
+        }
+      }
+      if (d && d.start) {
+        zaznam = d;
+        ulozZarizeni(jmeno);
+        return { spustit: true, stav: 'probiha', odpovedi: d.odpovedi || {}, zbyva: zbyva(), pokus: d.pokus || 1 };
+      }
+      zaznam = { jmeno: jmeno, start: new Date().toISOString(), odpovedi: {}, pokus: 1 };
+      uloz();
+      ulozZarizeni(jmeno);
+      return { spustit: true, stav: 'novy', zbyva: cfg.limit, pokus: 1 };
+    },
+    uloz: function (odpovedi, extra) {
+      if (!zaznam) return;
+      if (odpovedi) zaznam.odpovedi = odpovedi;
+      if (extra) zaznam.extra = extra;
+      uloz();
+    },
+    dokonci: function (kodOdevzdani) {
+      if (!zaznam) return;
+      zaznam.konec = new Date().toISOString();
+      zaznam.kod = kodOdevzdani || '';
+      uloz();
+    },
+    zbyvaSekund: function () { return zbyva(); },
+    pokus: function () { return zaznam && zaznam.pokus || 1; }
+  };
+})();
+</script>
+
+<script>
+// Dohled Module
+(function () {
+  'use strict';
+  if (window.Dohled) return;
+
+  var cfg = { rezim: 'ZAMEK', zamekPo: 2, kod: '74269', onLock: null, onUnlock: null, onEvent: null };
+  var bezi = false, zamceno = false;
+  var pocitadlo = 0, odemceni = 0;
+  var udalosti = [], sekundMimo = 0;
+  var t0 = 0, zaklad = null, epizoda = null, timerPoll = null, rafLast = 0, rafId = 0;
+  var poslTik = 0, posledniKonec = 0;
+  var vrstvaVar = null, vrstvaZamek = null;
+
+  function ted() { return Date.now(); }
+  function jeTextovePole() {
+    var a = document.activeElement;
+    if (!a) return false;
+    var t = (a.tagName || '').toUpperCase();
+    return t === 'INPUT' || t === 'TEXTAREA' || a.isContentEditable;
+  }
+  function siroke() { return !zaklad || window.innerWidth >= zaklad.w * 0.9; }
+
+  function zahaj(druh) {
+    if (!bezi || zamceno) return;
+    if (epizoda) {
+      if (ted() - epizoda.zac < 1500 && epizoda.druhy.indexOf(druh) === -1) epizoda.druhy.push(druh);
+      return;
+    }
+    epizoda = { zac: ted(), druh: druh, druhy: [druh] };
+  }
+
+  function ukonci() {
+    if (!epizoda) return;
+    var delka = Math.round((ted() - epizoda.zac) / 1000);
+    var e = epizoda; epizoda = null; posledniKonec = ted();
+    if (delka < 1 && e.druhy.every(function (d) { return d === 'fokus'; })) return;
+
+    sekundMimo += delka;
+    var zaznam = { t: Math.round((e.zac - t0) / 1000), d: delka, k: e.druhy.join('+') };
+    udalosti.push(zaznam);
+    pocitadlo++;
+    if (cfg.onEvent) { try { cfg.onEvent(zaznam); } catch (x) {} }
+
+    var pouzeFokus = e.druhy.every(function (d) { return d === 'fokus'; });
+    if (cfg.rezim !== 'ZAMEK') { if (!pouzeFokus || delka >= 5) ukazVarovani(zaznam); return; }
+    if (pouzeFokus && delka < 5) return;
+
+    zaznam.z = true;
+    var kZamku = udalosti.filter(function (u) { return u.z; }).length;
+    if (kZamku >= cfg.zamekPo) zamkni(); else ukazVarovani(zaznam, kZamku);
+  }
+
+  function zaznamenejPrimo(druh, delka, zacatekMs) {
+    if (!bezi || zamceno) return;
+    if (epizoda) return;
+    if (ted() - posledniKonec < 1500) return;
+    posledniKonec = ted();
+    sekundMimo += delka;
+    var zaznam = { t: Math.round((zacatekMs - t0) / 1000), d: delka, k: druh };
+    udalosti.push(zaznam);
+    pocitadlo++;
+    if (cfg.onEvent) { try { cfg.onEvent(zaznam); } catch (x) {} }
+    if (cfg.rezim !== 'ZAMEK') { ukazVarovani(zaznam); return; }
+    zaznam.z = true;
+    var kZamku = udalosti.filter(function (u) { return u.z; }).length;
+    if (kZamku >= cfg.zamekPo) zamkni(); else ukazVarovani(zaznam, kZamku);
+  }
+
+  function naVisibility() { if (document.hidden) zahaj('zalozka'); else ukonci(); }
+  function naPageHide() { zahaj('zalozka'); }
+  function naBlur() { if (!document.hidden) zahaj('fokus'); }
+  function naFocus() { ukonci(); }
+
+  function pollFokus() {
+    if (!bezi) return;
+    var nyni = ted();
+    if (poslTik) {
+      var mezera = nyni - poslTik;
+      if (mezera > 2500) zaznamenejPrimo('zalozka', Math.round(mezera / 1000), poslTik);
+    }
+    poslTik = nyni;
+    if (zamceno) return;
+    if (document.visibilityState === 'visible' && !document.hasFocus()) {
+      if (!epizoda) zahaj('fokus');
+    } else if (epizoda && epizoda.druhy.indexOf('zalozka') === -1) {
+      if (document.hasFocus()) ukonci();
+    }
+  }
+
+  function styl(el, css) { el.setAttribute('style', css); }
+  var BASE = 'position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;' +
+             'justify-content:center;padding:24px;background:rgba(8,10,18,.96);color:#e8eaf2;' +
+             'font-family:Georgia,serif;text-align:center;line-height:1.6';
+
+  function ukazVarovani(zaznam, kZamku) {
+    if (vrstvaZamek) return;
+    if (!vrstvaVar) {
+      vrstvaVar = document.createElement('div');
+      styl(vrstvaVar, BASE);
+      document.body.appendChild(vrstvaVar);
+    }
+    var zbyva = cfg.rezim === 'ZAMEK' ? Math.max(0, cfg.zamekPo - (kZamku || 0)) : 0;
+    vrstvaVar.innerHTML =
+      '<div style="max-width:420px">' +
+      '<div style="font-size:40px;margin-bottom:12px">⚠️</div>' +
+      '<div style="font-size:17px;margin-bottom:8px">Byl jsi mimo okno testu.</div>' +
+      '<div style="font-size:13px;opacity:.75;margin-bottom:18px">' +
+      (cfg.rezim === 'ZAMEK'
+        ? (zbyva > 0 ? 'Ještě ' + zbyva + '× a test se zamkne.' : 'Při dalším se test zamkne.')
+        : 'Zaznamenáno.') + '</div>' +
+      '<button id="dohled-pokr" style="padding:12px 22px;border-radius:10px;border:none;' +
+      'background:#c9a227;color:#0a0c14;font-size:15px;font-weight:700;font-family:Georgia,serif;' +
+      'cursor:pointer;min-height:46px">Pokračovat</button></div>';
+
+    vrstvaVar.querySelector('#dohled-pokr').onclick = function () {
+      if (vrstvaVar && vrstvaVar.parentNode) vrstvaVar.parentNode.removeChild(vrstvaVar);
+      vrstvaVar = null;
+    };
+  }
+
+  function zamkni() {
+    if (zamceno) return;
+    zamceno = true;
+    if (vrstvaVar && vrstvaVar.parentNode) vrstvaVar.parentNode.removeChild(vrstvaVar);
+    vrstvaVar = null;
+    vrstvaZamek = document.createElement('div');
+    styl(vrstvaZamek, BASE);
+    vrstvaZamek.innerHTML =
+      '<div style="max-width:420px">' +
+      '<div style="font-size:44px;margin-bottom:12px">🔒</div>' +
+      '<div style="font-size:18px;margin-bottom:6px">Test je zamčený.</div>' +
+      '<div style="font-size:14px;opacity:.8;margin-bottom:18px">Zavolej vyučujícího.</div>' +
+      '<input id="dohled-kod" type="password" inputmode="numeric" autocomplete="off" ' +
+      'placeholder="Odemykací kód" style="width:100%;padding:12px;border-radius:9px;' +
+      'border:1.5px solid #3a3f52;background:#141824;color:#e8eaf2;font-family:Georgia,serif;' +
+      'font-size:15px;text-align:center;min-height:46px;margin-bottom:10px">' +
+      '<button id="dohled-odemk" style="width:100%;padding:12px;border-radius:9px;border:none;' +
+      'background:#c9a227;color:#0a0c14;font-size:15px;font-weight:700;font-family:Georgia,serif;' +
+      'cursor:pointer;min-height:46px">Odemknout</button>' +
+      '<div id="dohled-chyba" style="font-size:13px;color:#ef4444;margin-top:10px;min-height:18px"></div>' +
+      '</div>';
+    document.body.appendChild(vrstvaZamek);
+
+    var vstup = vrstvaZamek.querySelector('#dohled-kod');
+    var chyba = vrstvaZamek.querySelector('#dohled-chyba');
+    function zkus() {
+      if (String(vstup.value).trim() === String(cfg.kod)) {
+        if (vrstvaZamek && vrstvaZamek.parentNode) vrstvaZamek.parentNode.removeChild(vrstvaZamek);
+        vrstvaZamek = null;
+        zamceno = false;
+        epizoda = null;
+        odemceni++;
+        udalosti.forEach(function (u) { u.z = false; });
+      } else {
+        chyba.textContent = 'Špatný kód.';
+        vstup.value = '';
+      }
+    }
+    vrstvaZamek.querySelector('#dohled-odemk').onclick = zkus;
+    vstup.onkeydown = function (e) { if (e.key === 'Enter') zkus(); };
+  }
+
+  window.Dohled = {
+    start: function (o) {
+      o = o || {};
+      if (o.rezim) cfg.rezim = o.rezim;
+      if (o.zamekPo) cfg.zamekPo = o.zamekPo;
+      if (o.kod) cfg.kod = o.kod;
+      bezi = true; t0 = ted(); poslTik = ted();
+      document.addEventListener('visibilitychange', naVisibility);
+      window.addEventListener('blur', naBlur);
+      window.addEventListener('focus', naFocus);
+      window.addEventListener('pagehide', naPageHide);
+      window.addEventListener('pageshow', naFocus);
+      timerPoll = setInterval(pollFokus, 1000);
+    },
+    stop: function () {
+      bezi = false;
+      clearInterval(timerPoll);
+      document.removeEventListener('visibilitychange', naVisibility);
+      window.removeEventListener('blur', naBlur);
+      window.removeEventListener('focus', naFocus);
+    },
+    jeZamceno: function () { return zamceno; },
+    telemetrie: function () {
+      return { c: udalosti.length, s: sekundMimo, o: odemceni, e: udalosti };
+    }
+  };
+})();
+</script>
+
+</body>
+</html>
