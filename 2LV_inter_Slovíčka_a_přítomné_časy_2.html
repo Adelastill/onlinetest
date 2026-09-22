@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LV inter - Slovíčka a přítomné časy 2</title>
+<style>
+:root{--primary-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);--bg-color:#f4f7f6;--card-bg:#ffffff;--text-main:#333333;--text-muted:#666666;--accent:#667eea;--border:#e2e8f0;--success:#22c55e;--danger:#ef4444;--radius:14px;--font:system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg-color);color:var(--text-main);line-height:1.5;display:flex;flex-direction:column;min-height:100vh}
+header{background:var(--primary-gradient);color:#fff;padding:16px 24px;border-radius:0 0 16px 16px;box-shadow:0 4px 15px rgba(102,126,234,0.3);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+header h1{font-size:1.15rem;font-weight:600}
+#timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.1rem;background:rgba(0,0,0,0.2);padding:6px 12px;border-radius:8px}
+#timer.blinking{animation:blink 1s infinite;background:var(--danger)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+main{flex:1;max-width:800px;width:100%;margin:20px auto;padding:0 16px;display:flex;flex-direction:column;gap:20px}
+.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,0.06);padding:24px;position:relative}
+.btn{background:var(--primary-gradient);color:#fff;border:none;padding:12px 24px;font-size:1rem;font-weight:600;border-radius:9px;cursor:pointer;transition:transform 0.2s ease,box-shadow 0.2s ease;display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.3)}
+.btn:active{transform:translateY(0)}
+.btn-secondary{background:transparent;border:1.5px solid var(--border);color:var(--text-main)}
+.btn-secondary:hover{background:var(--bg-color)}
+input[type="text"],textarea{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:9px;font-size:1rem;font-family:var(--font);outline:none;transition:border-color 0.2s}
+input[type="text"]:focus,textarea:focus{border-color:var(--accent)}
+.progress-bar-container{height:6px;background:var(--border);border-radius:3px;overflow:hidden;width:100%;margin-bottom:15px}
+.progress-bar{height:100%;background:var(--primary-gradient);width:0%;transition:width 0.3s ease}
+.tabs-bar{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-weight:600;font-size:0.9rem;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab-btn.completed::after{content:'✓';font-size:0.8rem;background:var(--success);color:#fff;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center}
+.question-item{margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid var(--border)}
+.question-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.q-text{font-size:1rem;margin-bottom:8px;font-weight:500}
+.nav-buttons{display:flex;justify-content:space-between;margin-top:20px;padding-top:15px;border-top:1px solid var(--border)}
+.intro-list{list-style:none;margin:15px 0;display:flex;flex-direction:column;gap:10px}
+.intro-list li{display:flex;align-items:flex-start;gap:10px;font-size:0.95rem}
+.hidden{display:none!important}
+textarea.code-area{font-family:monospace;font-size:0.85rem;background:#f8fafc;resize:none;height:80px}
+</style>
+</head>
+<body>
+
+<script>
+window.addEventListener('message', function(ev){
+  var d = ev.data || {};
+  if (d.type !== 'SELFCHECK_BUILD') return;
+  try {
+    var code = buildSubmitCode(d.answers);
+    parent.postMessage({ type:'SELFCHECK_CODE', code: code }, '*');
+  } catch (err) {
+    parent.postMessage({ type:'SELFCHECK_ERROR', where:'student', msg:String(err) }, '*');
+  }
+});
+
+function cyrb53(str, seed = 0) {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36).toUpperCase();
+}
+
+function base64UrlEncode(str) {
+  try {
+    return btoa(unescape(encodeURIComponent(str))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  } catch (e) {
+    return btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  }
+}
+
+const SUBMIT_SALT = "XLFLGVP5JYYY";
+const TEST_ID = "LV inter - Slovíčka a přítomné časy 2";
+
+function buildSubmitCode(ansMap) {
+  var payload = {
+    v: 1,
+    t: TEST_ID,
+    n: window._studentName || "Unknown",
+    s: window._startTime || new Date().toISOString(),
+    e: new Date().toISOString(),
+    d: Math.round((Date.now() - (window._startTimestamp || Date.now())) / 1000),
+    a: ansMap || {},
+    x: window.Dohled && typeof window.Dohled.telemetrie === 'function' ? window.Dohled.telemetrie() : {c:0,s:0,e:[],o:0},
+    o: window.Relace && typeof window.Relace.pokus === 'function' ? window.Relace.pokus() : 1
+  };
+  var jsonStr = JSON.stringify(payload);
+  var b64 = base64UrlEncode(jsonStr);
+  var hash = cyrb53(b64 + SUBMIT_SALT);
+  return "TST1." + b64 + "." + hash;
+}
+</script>
+
+<header id="main-header" class="hidden">
+  <h1 id="header-title">LV inter - Slovíčka a přítomné časy 2</h1>
+  <div id="timer">20:00</div>
+</header>
+
+<main>
+  <!-- INTRO SCREEN -->
+  <div id="intro-screen" class="card">
+    <h2 style="margin-bottom: 12px;">LV inter - Slovíčka a přítomné časy 2</h2>
+    <ul class="intro-list">
+      <li>📋 <strong>CO TĚ ČEKÁ:</strong> Celkem 25 otázek, 25 bodů. Časový limit 20 minut.</li>
+      <li>⛔ <strong>CO NENÍ DOVOLENO:</strong> Přepínat na jiné záložky, dělit obrazovku, kopírovat text. Odchody se počítají, při 2. se test zamkne.</li>
+      <li>🏁 <strong>JAK TO SKONČÍ:</strong> Po odevzdání dostaneš kód, který odevzdáš podle pokynů učitele.</li>
+    </ul>
+    
+    <div style="margin: 20px 0;">
+      <label style="display:block;margin-bottom:6px;font-weight:600;font-size:0.9rem">Jméno / Kód studenta:</label>
+      <input type="text" id="student-name-input" placeholder="Zadej své jméno (min. 3 znaky)" autocomplete="off">
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-secondary" id="fs-btn" type="button" style="flex:1">🲲 Celá obrazovka</button>
+      <button class="btn" id="start-btn" type="button" style="flex:2" disabled>Spustit test</button>
+    </div>
+  </div>
+
+  <!-- TEST CONTAINER -->
+  <div id="test-container" class="hidden">
+    <div class="card" style="margin-bottom: 20px;">
+      <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="tabs-bar" id="tabs-bar"></div>
+    </div>
+
+    <div class="card" id="exercise-card">
+      <h3 id="ex-title" style="margin-bottom: 8px;"></h3>
+      <p id="ex-desc" style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;"></p>
+      
+      <div id="questions-area"></div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" id="prev-btn" type="button">Předchozí</button>
+        <button class="btn" id="next-btn" type="button">Další</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMITTED SCREEN -->
+  <div id="submitted-screen" class="card hidden" style="text-align: center;">
+    <h2 style="margin-bottom: 12px;">Test byl úspěšně odevzdán</h2>
+    <p id="sub-info" style="color:var(--text-muted);margin-bottom:20px;"></p>
+    
+    <div style="margin-bottom: 20px; text-align: left;">
+      <label style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:4px">Odevzdávací kód:</label>
+      <textarea readonly class="code-area" id="sub-code-area"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="btn" id="copy-code-btn" type="button" style="flex:1">Zkopírovat odevzdávací kód</button>
+      <button class="btn btn-secondary" id="download-txt-btn" type="button" style="flex:1">Stáhnout jako .txt</button>
+    </div>
+
+    <div style="background:var(--bg-color);padding:16px;border-radius:9px;margin-bottom:20px;">
+      <p style="font-size:0.9rem;margin-bottom:12px;">Vlož kód do formuláře a odešli. Bez odeslání se test nepočítá.</p>
+      <div id="qr-container" style="display:flex;justify-content:center;margin-bottom:12px;"></div>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLScLRY_E78LJIYfolj3YcFkm4UB4d--vRbrVZpGxhAYHdZMWTQ/viewform?usp=pp_url&entry.1520169381=LV+Inter+-+Slov%C3%AD%C4%8Dka+a+p%C5%99%C3%ADtomn%C3%A9+%C4%8Dasy+2&entry.1323556300=5B8+sk.1" target="_blank" style="color:var(--accent);font-weight:600;text-decoration:none;">Otevřít odesílací formulář</a>
+    </div>
+
+    <p style="font-weight:600;color:var(--text-muted)">Výsledky ti sdělí vyučující.</p>
+  </div>
+</main>
+
+<script>
+// Dohled module
+(function () {
+  'use strict';
+  if (window.Dohled) return;
+  var cfg = { rezim: 'ZAMEK', zamekPo: 2, kod: '74269', onLock: null, onUnlock: null, onEvent: null };
+  var bezi = false, zamceno = false;
+  var pocitadlo = 0, odemceni = 0;
+  var udalosti = [], sekundMimo = 0;
+  var t0 = 0, zaklad = null, epizoda = null, timerPoll = null, rafLast = 0, rafId = 0;
+  var poslTik = 0, posledniKonec = 0;
+  var vrstvaVar = null, vrstvaZamek = null;
+
+  function ted() { return Date.now(); }
+  function jeTextovePole() {
+    var a = document.activeElement;
+    if (!a) return false;
+    var t = (a.tagName || '').toUpperCase();
+    return t === 'INPUT' || t === 'TEXTAREA' || a.isContentEditable;
+  }
+  function siroke() { return !zaklad || window.innerWidth >= zaklad.w * 0.9; }
+
+  function zahaj(druh) {
+    if (!bezi || zamceno) return;
+    if (epizoda) {
+      if (ted() - epizoda.zac < 1500 && epizoda.druhy.indexOf(druh) === -1) epizoda.druhy.push(druh);
+      return;
+    }
+    epizoda = { zac: ted(), druh: druh, druhy: [druh] };
+  }
+
+  function ukonci() {
+    if (!epizoda) return;
+    var delka = Math.round((ted() - epizoda.zac) / 1000);
+    var e = epizoda; epizoda = null; posledniKonec = ted();
+    if (delka < 1 && e.druhy.every(function (d) { return d === 'fokus'; })) return;
+
+    sekundMimo += delka;
+    var zaznam = { t: Math.round((e.zac - t0) / 1000), d: delka, k: e.druhy.join('+') };
+    udalosti.push(zaznam);
+    pocitadlo++;
+    if (cfg.onEvent) { try { cfg.onEvent(zaznam); } catch (x) {} }
+
+    var pouzeFokus = e.druhy.every(function (d) { return d === 'fokus'; });
+    if (cfg.rezim !== 'ZAMEK') { if (!pouzeFokus || delka >= 5) ukazVarovani(zaznam); return; }
+    if (pouzeFokus && delka < 5) return;
+
+    zaznam.z = true;
+    var kZamku = udalosti.filter(function (u) { return u.z; }).length;
+    if (kZamku >= cfg.zamekPo) zamkni(); else ukazVarovani(zaznam, kZamku);
+  }
+
+  function zaznamenejPrimo(druh, delka, zacatekMs) {
+    if (!bezi || zamceno || epizoda) return;
+    if (ted() - posledniKonec < 1500) return;
+    posledniKonec = ted();
+    sekundMimo += delka;
+    var zaznam = { t: Math.round((zacatekMs - t0) / 1000), d: delka, k: druh };
+    udalosti.push(zaznam);
+    pocitadlo++;
+    if (cfg.onEvent) { try { cfg.onEvent(zaznam); } catch (x) {} }
+    if (cfg.rezim !== 'ZAMEK') { ukazVarovani(zaznam); return; }
+    zaznam.z = true;
+    var kZamku = udalosti.filter(function (u) { return u.z; }).length;
+    if (kZamku >= cfg.zamekPo) zamkni(); else ukazVarovani(zaznam, kZamku);
+  }
+
+  function naVisibility() { if (document.hidden) zahaj('zalozka'); else ukonci(); }
+  function naPageHide() { zahaj('zalozka'); }
+  function naBlur() { if (!document.hidden) zahaj('fokus'); }
+  function naFocus() { ukonci(); }
+
+  function pollFokus() {
+    if (!bezi) return;
+    var nyni = ted();
+    if (poslTik) {
+      var mezera = nyni - poslTik;
+      if (mezera > 1500) zaznamenejPrimo('zalozka', Math.max(1, Math.round(mezera / 1000)), poslTik);
+    }
+    poslTik = nyni;
+    if (zamceno) return;
+    if (document.visibilityState === 'visible' && !document.hasFocus()) {
+      if (!epizoda) zahaj('fokus');
+    } else if (epizoda && epizoda.druhy.indexOf('zalozka') === -1) {
+      if (document.hasFocus() && jeVeliksotOk()) ukonci();
+    }
+  }
+  function jeVeliksotOk() {
+    if (!zaklad) return true;
+    return window.innerWidth >= zaklad.w * 0.9 && window.innerHeight >= zaklad.h * 0.7;
+  }
+
+  function naResize() {
+    if (!bezi || zamceno || !zaklad) return;
+    var w = window.innerWidth, h = window.innerHeight;
+    var otoceno = (zaklad.w > zaklad.h) !== (w > h);
+    if (otoceno) { zaklad = { w: w, h: h }; return; }
+    if (w < zaklad.w * 0.85 || (h < zaklad.h * 0.7 && !jeTextovePole())) { zahaj('split'); return; }
+    if (epizoda && epizoda.druhy.indexOf('split') !== -1 && jeVeliksotOk()) ukonci();
+  }
+
+  function rafTik(ts) {
+    if (!bezi) return;
+    if (rafLast && ts - rafLast > 1200) {
+      zaznamenejPrimo(document.visibilityState === 'visible' ? 'fokus' : 'zalozka', Math.round((ts - rafLast) / 1000), ted() - (ts - rafLast));
+    }
+    rafLast = ts;
+    rafId = window.requestAnimationFrame(rafTik);
+  }
+
+  function styl(el, css) { el.setAttribute('style', css); }
+  var BASE = 'position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,10,18,.96);color:#e8eaf2;font-family:Georgia,serif;text-align:center;line-height:1.6';
+
+  function ukazVarovani(zaznam, kZamku) {
+    if (vrstvaZamek) return;
+    var jeSplit = zaznam.k.indexOf('split') !== -1;
+    if (!vrstvaVar) {
+      vrstvaVar = document.createElement('div');
+      styl(vrstvaVar, BASE);
+      document.body.appendChild(vrstvaVar);
+    }
+    var zbyva = cfg.rezim === 'ZAMEK' ? Math.max(0, cfg.zamekPo - (kZamku || 0)) : 0;
+    vrstvaVar.innerHTML = '<div style="max-width:420px"><div style="font-size:40px;margin-bottom:12px">' + (jeSplit ? '⛶' : '⚠️') + '</div><div style="font-size:17px;margin-bottom:8px">' + (jeSplit ? 'Test musí běžet přes celou obrazovku.' : 'Byl jsi mimo okno testu.') + '</div><div style="font-size:13px;opacity:.75;margin-bottom:18px">' + (cfg.rezim === 'ZAMEK' ? (zbyva > 0 ? 'Ještě ' + zbyva + '× a test se zamkne.' : 'Při dalším se test zamkne.') : 'Zaznamenáno.') + '</div><button id="dohled-pokr" style="padding:12px 22px;border-radius:10px;border:none;background:#c9a227;color:#0a0c14;font-size:15px;font-weight:700;cursor:pointer">Pokračovat</button><div id="dohled-pozn" style="font-size:12px;opacity:.7;margin-top:10px"></div></div>';
+    var btn = vrstvaVar.querySelector('#dohled-pokr');
+    var pozn = vrstvaVar.querySelector('#dohled-pozn');
+    function hlidej() {
+      if (!vrstvaVar) return;
+      var ok = !jeSplit || siroke();
+      btn.disabled = !ok;
+      btn.style.opacity = ok ? '1' : '.45';
+      pozn.textContent = ok ? '' : 'Vrať test na celou obrazovku.';
+      if (!ok) window.requestAnimationFrame(hlidej);
+    }
+    hlidej();
+    btn.onclick = function () { if (!btn.disabled) skryjVarovani(); };
+  }
+
+  function skryjVarovani() {
+    if (vrstvaVar && vrstvaVar.parentNode) vrstvaVar.parentNode.removeChild(vrstvaVar);
+    vrstvaVar = null;
+  }
+
+  function zamkni() {
+    if (zamceno) return;
+    zamceno = true;
+    skryjVarovani();
+    if (cfg.onLock) { try { cfg.onLock(); } catch (x) {} }
+    vrstvaZamek = document.createElement('div');
+    styl(vrstvaZamek, BASE);
+    vrstvaZamek.innerHTML = '<div style="max-width:420px"><div style="font-size:44px;margin-bottom:12px">🔒</div><div style="font-size:18px;margin-bottom:6px">Test je zamčený.</div><div style="font-size:14px;opacity:.8;margin-bottom:18px">Zavolej vyučujícího. Tvoje odpovědi zůstaly uložené.</div><input id="dohled-kod" type="password" inputmode="numeric" placeholder="Odemykací kód" style="width:100%;padding:12px;border-radius:9px;border:1.5px solid #3a3f52;background:#141824;color:#e8eaf2;font-size:15px;text-align:center;margin-bottom:10px"><button id="dohled-odemk" style="width:100%;padding:12px;border-radius:9px;border:none;background:#c9a227;color:#0a0c14;font-size:15px;font-weight:700;cursor:pointer">Odemknout</button><div id="dohled-chyba" style="font-size:13px;color:#ef4444;margin-top:10px"></div></div>';
+    document.body.appendChild(vrstvaZamek);
+    var vstup = vrstvaZamek.querySelector('#dohled-kod');
+    var chyba = vrstvaZamek.querySelector('#dohled-chyba');
+    function zkus() {
+      if (String(vstup.value).trim() === String(cfg.kod)) {
+        if (vrstvaZamek && vrstvaZamek.parentNode) vrstvaZamek.parentNode.removeChild(vrstvaZamek);
+        vrstvaZamek = null; zamceno = false; epizoda = null; odemceni++;
+        udalosti.forEach(function (u) { u.z = false; });
+        zaklad = { w: window.innerWidth, h: window.innerHeight };
+        if (cfg.onUnlock) { try { cfg.onUnlock(); } catch (x) {} }
+      } else { chyba.textContent = 'Špatný kód.'; vstup.value = ''; }
+    }
+    vrstvaZamek.querySelector('#dohled-odemk').onclick = zkus;
+    vstup.onkeydown = function (e) { if (e.key === 'Enter') zkus(); };
+  }
+
+  window.Dohled = {
+    start: function (o) {
+      o = o || {};
+      if (cfg.rezim === 'ZADNY') return;
+      bezi = true; t0 = ted(); poslTik = ted();
+      setTimeout(function () { zaklad = { w: window.innerWidth, h: window.innerHeight }; }, 2000);
+      document.addEventListener('visibilitychange', naVisibility);
+      window.addEventListener('blur', naBlur);
+      window.addEventListener('focus', naFocus);
+      window.addEventListener('pagehide', naPageHide);
+      window.addEventListener('pageshow', naFocus);
+      window.addEventListener('resize', naResize);
+      timerPoll = setInterval(pollFokus, 500);
+      rafId = window.requestAnimationFrame(rafTik);
+    },
+    stop: function () {
+      bezi = false;
+      clearInterval(timerPoll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+      document.removeEventListener('visibilitychange', naVisibility);
+      skryjVarovani();
+    },
+    jeZamceno: function () { return zamceno; },
+    telemetrie: function () { return { c: udalosti.length, s: sekundMimo, o: odemceni, e: udalosti }; },
+    obnov: function (t) { if (!t) return; udalosti = t.e || []; sekundMimo = t.s || 0; odemceni = t.o || 0; }
+  };
+})();
+
+// Relace module
+(function () {
+  'use strict';
+  if (window.Relace) return;
+  var cfg = { testId: 'LV inter - Slovíčka a přítomné časy 2', kod: '74269', rezim: 'JEDNOU', limit: 1200, kodHodiny: '' };
+  
+  function otisk(t) {
+    t = String(t == null ? '' : t).trim().toLowerCase();
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57, ch;
+    for (var i = 0; i < t.length; i++) {
+      ch = t.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  var zaznam = null, klic = '', hotovoVrstva = null, onNovy = null;
+
+  function cti(k) {
+    try { var v = window.localStorage.getItem(k); if (v != null) return v; } catch (e) {}
+    try { var v2 = window.sessionStorage.getItem(k); if (v2 != null) return v2; } catch (e) {}
+    return null;
+  }
+  function zapis(k, v) {
+    try { window.localStorage.setItem(k, v); } catch (e) {}
+    try { window.sessionStorage.setItem(k, v); } catch (e) {}
+  }
+  function smaz(k) {
+    try { window.localStorage.removeItem(k); } catch (e) {}
+    try { window.sessionStorage.removeItem(k); } catch (e) {}
+  }
+
+  function normJmeno(j) { return String(j || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+  function klicPro(j) { return 'relace:' + cfg.testId + ':' + normJmeno(j); }
+  function klicZarizeni() { return 'relace:' + cfg.testId + ':__zarizeni__'; }
+  function nactiZarizeni() { try { return JSON.parse(cti(klicZarizeni())); } catch (e) { return null; } }
+  function ulozZarizeni(j) { zapis(klicZarizeni(), JSON.stringify({ jmeno: j, kdy: new Date().toISOString() })); }
+
+  function nacti(j) { try { return JSON.parse(cti(klicPro(j))); } catch (e) { return null; } }
+  function uloz() { if (zaznam && klic) zapis(klic, JSON.stringify(zaznam)); }
+  function zbyva() {
+    if (!zaznam || !zaznam.start) return cfg.limit;
+    return Math.max(0, cfg.limit - Math.floor((Date.now() - new Date(zaznam.start).getTime()) / 1000));
+  }
+
+  var BASE = 'position:fixed;inset:0;z-index:2147483500;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,10,18,.97);color:#e8eaf2;font-family:Georgia,serif;text-align:center';
+
+  function ukazBlokovano(zar) {
+    hotovoVrstva = document.createElement('div');
+    hotovoVrstva.setAttribute('style', BASE);
+    hotovoVrstva.innerHTML = '<div style="max-width:440px"><div style="font-size:44px;margin-bottom:12px">🚫</div><div style="font-size:18px;margin-bottom:6px">Na tomto zařízení už byl test spuštěn.</div><div style="font-size:14px;opacity:.8;margin-bottom:16px">Psal ho: ' + (zar.jmeno || '—') + '</div><input id="relace-kod" type="password" placeholder="Učitelský kód" style="width:100%;padding:12px;border-radius:9px;border:1.5px solid #3a3f52;background:#141824;color:#e8eaf2;font-size:15px;text-align:center;margin-bottom:10px"><button id="relace-odemk" style="width:100%;padding:12px;border-radius:9px;border:none;background:#c9a227;color:#0a0c14;font-size:15px;font-weight:700;cursor:pointer">Povolit spuštění</button></div>';
+    document.body.appendChild(hotovoVrstva);
+    hotovoVrstva.querySelector('#relace-odemk').onclick = function () {
+      if (String(hotovoVrstva.querySelector('#relace-kod').value).trim() === String(cfg.kod)) {
+        smaz(klicZarizeni()); if (klic) smaz(klic); zaznam = null;
+        hotovoVrstva.remove(); hotovoVrstva = null;
+        if (onNovy) onNovy(1);
+      }
+    };
+  }
+
+  function ukazHotovo() {
+    hotovoVrstva = document.createElement('div');
+    hotovoVrstva.setAttribute('style', BASE);
+    hotovoVrstva.innerHTML = '<div style="max-width:440px"><div style="font-size:44px;margin-bottom:12px">✓</div><div style="font-size:18px;margin-bottom:6px">Tento test jsi už odevzdal.</div><textarea readonly style="width:100%;height:70px;background:#141824;color:#e8eaf2;border:1.5px solid #3a3f52;border-radius:9px;padding:9px;font-family:monospace;font-size:11px;margin-bottom:12px">' + (zaznam.kod || '') + '</textarea><input id="relace-kod" type="password" placeholder="Kód pro nový pokus" style="width:100%;padding:12px;border-radius:9px;border:1.5px solid #3a3f52;background:#141824;color:#e8eaf2;font-size:15px;text-align:center;margin-bottom:10px"><button id="relace-odemk" style="width:100%;padding:12px;border-radius:9px;border:none;background:#c9a227;color:#0a0c14;font-size:15px;font-weight:700;cursor:pointer">Povolit nový pokus</button></div>';
+    document.body.appendChild(hotovoVrstva);
+    hotovoVrstva.querySelector('#relace-odemk').onclick = function () {
+      if (String(hotovoVrstva.querySelector('#relace-kod').value).trim() === String(cfg.kod)) {
+        smaz(klic); smaz(klicZarizeni()); zaznam = null;
+        hotovoVrstva.remove(); hotovoVrstva = null;
+        if (onNovy) onNovy((zaznam && zaznam.pokus || 1) + 1);
+      }
+    };
+  }
+
+  window.Relace = {
+    nastav: function (o) { o = o || {}; if (o.limit) cfg.limit = o.limit; if (o.kod) cfg.kod = o.kod; onNovy = o.onNovyPokus; },
+    zahaj: function (jmeno) {
+      klic = klicPro(jmeno);
+      var d = nacti(jmeno);
+      var zar = nactiZarizeni();
+      if (zar && normJmeno(zar.jmeno) !== normJmeno(jmeno)) { ukazBlokovano(zar); return { spustit: false }; }
+      if (d && d.konec) { zaznam = d; ukazHotovo(); return { spustit: false }; }
+      if (d && d.start) { zaznam = d; ulozZarizeni(jmeno); return { spustit: true, stav: 'probiha', odpovedi: d.odpovedi || {}, zbyva: zbyva() }; }
+      zaznam = { jmeno: jmeno, start: new Date().toISOString(), odpovedi: {}, pokus: 1 };
+      uloz(); ulozZarizeni(jmeno);
+      return { spustit: true, stav: 'novy', zbyva: cfg.limit };
+    },
+    uloz: function (odpovedi) { if (zaznam) { zaznam.odpovedi = odpovedi; uloz(); } },
+    dokonci: function (kod) { if (zaznam) { zaznam.konec = new Date().toISOString(); zaznam.kod = kod; uloz(); } },
+    pokus: function () { return zaznam && zaznam.pokus || 1; }
+  };
+})();
+
+// Test Data
+const testData = {
+ "nazev": "LV inter - Slovíčka a přítomné časy 2",
+ "pokyny": "Complete all exercises. Fill in the open cloze items with the correct word starting with the given letter, put the verbs in the correct present tenses, and correct the grammar errors.",
+ "cviceni": [
+  {
+   "id": "c1",
+   "nadpis": "Exercise 1: Open Cloze (First Letter)",
+   "zadani": "Complete the sentences with words from the vocabulary list. The first letter is given.",
+   "typ": "open",
+   "otazky": [
+    {"id": "c1q1", "text": "During the break, we always q___ up for lunch in the canteen."},
+    {"id": "c1q2", "text": "She wants to e___ at maths because she studies very hard."},
+    {"id": "c1q3", "text": "If you don't understand the exercise, you can s___ with it and ask for help."},
+    {"id": "c1q4", "text": "Switching from basic math to advanced calculus in high school presented a s_____ learning curve, requiring extra hours of studying every night to keep up."},
+    {"id": "c1q5", "text": "Spending most of the day sitting in classrooms and evening hours studying contributes to a s_____ lifestyle among high school students."},
+    {"id": "c1q6", "text": "An i_______ family refers to a person's closest and most direct relatives, usually including parents, siblings, a spouse, and children"},
+    {"id": "c1q7", "text": "My parents celebrate their wedding a_______ with a big family dinner."},
+    {"id": "c1q8", "text": "His brother is in his early t___, around 21 or 22 years old."},
+    {"id": "c1q9", "text": "They decided to s___ down and buy a house in the suburbs."},
+    {"id": "c1q10", "text": "After school, the teacher has to m___ the tests and write down the grades."}
+   ]
+  },
+  {
+   "id": "c2",
+   "nadpis": "Exercise 2: Present Tenses",
+   "zadani": "Put the verbs in brackets into the correct present tense (present simple, present continuous, or with 'always' for annoying habits).",
+   "typ": "open",
+   "otazky": [
+    {"id": "c2q1", "text": "Listen! Who ___ (play) the piano in the music room right now?"},
+    {"id": "c2q2", "text": "My younger brother __ always ____ (interrupt) me when I am doing my homework! It's so annoying."},
+    {"id": "c2q3", "text": "What time ___ the school bell usually ___ (go off) in the morning?"},
+    {"id": "c2q4", "text": "Who ___ (know) the answer to this difficult question on the board?"},
+    {"id": "c2q5", "text": "She normally ___ (hand in) her essays on time, but today she is late."},
+    {"id": "c2q6", "text": "Look at those teenagers over there! What ___ they ___ (do) near the lockers?"},
+    {"id": "c2q7", "text": "We ___ (not understand) this grammar rule. Can you explain it again?"},
+    {"id": "c2q8", "text": "Why ___ you always ___ (leave) your school bag in the middle of the corridor? It's a really annoying habit."},
+    {"id": "c2q9", "text": "Our headmaster ___ (speak) to the parents in the assembly hall right now."},
+    {"id": "c2q10", "text": "Who ___ (want, you) to invite to the party?"}
+   ]
+  },
+  {
+   "id": "c3",
+   "nadpis": "Exercise 3: Error Correction",
+   "zadani": "Find the mistake in each sentence and correct it. Write only the corrected part or the whole corrected sentence.",
+   "typ": "open",
+   "otazky": [
+    {"id": "c3q1", "text": "She is not liking history lessons because she finds them really boring."},
+    {"id": "c3q2", "text": "What do you doing after school today?"},
+    {"id": "c3q3", "text": "Who are know the answer to this exercise?"},
+    {"id": "c3q4", "text": "He usually lose his temper when the class is very rowdy."},
+    {"id": "c3q5", "text": "They is working together on a difficult school assignment right now."}
+   ]
+  }
+]
+};
+
+// App State
+let currentExIdx = 0;
+let answers = {};
+let timeLeft = 1200;
+let timerInterval = null;
+let isStarted = false;
+
+// DOM Elements
+const nameInput = document.getElementById('student-name-input');
+const startBtn = document.getElementById('start-btn');
+const fsBtn = document.getElementById('fs-btn');
+const introScreen = document.getElementById('intro-screen');
+const testContainer = document.getElementById('test-container');
+const submittedScreen = document.getElementById('submitted-screen');
+const mainHeader = document.getElementById('main-header');
+const timerEl = document.getElementById('timer');
+const tabsBar = document.getElementById('tabs-bar');
+const exTitle = document.getElementById('ex-title');
+const exDesc = document.getElementById('ex-desc');
+const questionsArea = document.getElementById('questions-area');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const progressBar = document.getElementById('progress-bar');
+
+nameInput.addEventListener('input', () => {
+  startBtn.disabled = nameInput.value.trim().length < 3;
+});
+
+fsBtn.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+});
+
+startBtn.addEventListener('click', () => {
+  const name = nameInput.value.trim();
+  if (name.length < 3) return;
+  window._studentName = name;
+
+  Relace.nastav({ onNovyPokus: () => location.reload() });
+  const res = Relace.zahaj(name);
+  if (res && res.spustit === false) return;
+
+  if (res && res.odpovedi) answers = res.odpovedi;
+  timeLeft = res && res.zbyva !== undefined ? res.zbyva : 1200;
+
+  if (timeLeft <= 0) {
+    submitTest();
+    return;
+  }
+
+  window._startTime = new Date().toISOString();
+  window._startTimestamp = Date.now() - (1200 - timeLeft) * 1000;
+
+  introScreen.classList.add('hidden');
+  mainHeader.classList.remove('hidden');
+  testContainer.classList.remove('hidden');
+
+  try { if (window.Dohled) Dohled.start(); } catch (e) {}
+
+  isStarted = true;
+  initTabs();
+  renderExercise(currentExIdx);
+  startTimer();
+});
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  timerEl.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  if (timeLeft <= 300) {
+    timerEl.classList.add('blinking');
+  }
+}
+
+function initTabs() {
+  tabsBar.innerHTML = '';
+  testData.cviceni.forEach((ex, idx) => {
+    const btn = document.createElement('button');
+    btn.className = `tab-btn ${idx === currentExIdx ? 'active' : ''}`;
+    btn.textContent = `Ex. ${idx + 1}`;
+    btn.onclick = () => {
+      saveCurrentInputs();
+      currentExIdx = idx;
+      renderExercise(currentExIdx);
+      updateTabsState();
+    };
+    tabsBar.appendChild(btn);
+  });
+  updateTabsState();
+}
+
+function updateTabsState() {
+  const tabBtns = tabsBar.querySelectorAll('.tab-btn');
+  testData.cviceni.forEach((ex, idx) => {
+    const allAnswered = ex.otazky.every(q => answers[q.id] && answers[q.id].trim() !== '');
+    if (allAnswered) {
+      tabBtns[idx].classList.add('completed');
+    } else {
+      tabBtns[idx].classList.remove('completed');
+    }
+    if (idx === currentExIdx) {
+      tabBtns[idx].classList.add('active');
+    } else {
+      tabBtns[idx].classList.remove('active');
+    }
+  });
+
+  let totalQ = 0, answeredQ = 0;
+  testData.cviceni.forEach(ex => {
+    ex.otazky.forEach(q => {
+      totalQ++;
+      if (answers[q.id] && answers[q.id].trim() !== '') answeredQ++;
+    });
+  });
+  progressBar.style.width = `${(answeredQ / totalQ) * 100}%`;
+}
+
+function renderExercise(idx) {
+  const ex = testData.cviceni[idx];
+  exTitle.textContent = ex.nadpis;
+  exDesc.textContent = ex.zadani;
+
+  questionsArea.innerHTML = '';
+  ex.otazky.forEach((q, qIdx) => {
+    const item = document.createElement('div');
+    item.className = 'question-item';
+
+    const textEl = document.createElement('div');
+    textEl.className = 'q-text';
+    textEl.textContent = `${qIdx + 1}. ${q.text}`;
+    item.appendChild(textEl);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.value = answers[q.id] || '';
+    input.dataset.qid = q.id;
+    input.oninput = (e) => {
+      answers[q.id] = e.target.value;
+      try { Relace.uloz(answers); } catch (err) {}
+      updateTabsState();
+    };
+    item.appendChild(input);
+
+    questionsArea.appendChild(item);
+  });
+
+  prevBtn.style.display = idx === 0 ? 'none' : 'block';
+  nextBtn.textContent = idx === testData.cviceni.length - 1 ? 'Odevzdat test' : 'Další';
+}
+
+function saveCurrentInputs() {
+  const inputs = questionsArea.querySelectorAll('input[type="text"]');
+  inputs.forEach(inp => {
+    const qid = inp.dataset.qid;
+    if (qid) {
+      answers[qid] = inp.value;
+    }
+  });
+  try { Relace.uloz(answers); } catch (e) {}
+}
+
+prevBtn.onclick = () => {
+  saveCurrentInputs();
+  if (currentExIdx > 0) {
+    currentExIdx--;
+    renderExercise(currentExIdx);
+    updateTabsState();
+  }
+};
+
+nextBtn.onclick = () => {
+  saveCurrentInputs();
+  if (currentExIdx < testData.cviceni.length - 1) {
+    currentExIdx++;
+    renderExercise(currentExIdx);
+    updateTabsState();
+  } else {
+    // Check for unanswered
+    let unanswered = 0;
+    testData.cviceni.forEach(ex => {
+      ex.otazky.forEach(q => {
+        if (!answers[q.id] || answers[q.id].trim() === '') unanswered++;
+      });
+    });
+
+    if (unanswered > 0) {
+      if (!confirm(`Máš ${unanswered} nezodpovězených otázek. Opravdu chceš test odevzdat?`)) return;
+    } else {
+      if (!confirm("Opravdu chceš test odevzdat?")) return;
+    }
+    submitTest();
+  }
+};
+
+function submitTest() {
+  if (timerInterval) clearInterval(timerInterval);
+  saveCurrentInputs();
+
+  var telemetrie = {};
+  try {
+    if (window.Dohled) {
+      Dohled.stop();
+      telemetrie = Dohled.telemetrie();
+    }
+  } catch (e) {}
+
+  let code = "";
+  try {
+    code = buildSubmitCode(answers);
+  } catch (e) {
+    code = "ERROR_GENERATING_CODE";
+  }
+
+  try { if (window.Relace) Relace.dokonci(code); } catch (e) {}
+
+  testContainer.classList.add('hidden');
+  mainHeader.classList.add('hidden');
+  submittedScreen.classList.remove('hidden');
+
+  let totalQ = 0, answeredQ = 0;
+  testData.cviceni.forEach(ex => {
+    ex.otazky.forEach(q => {
+      totalQ++;
+      if (answers[q.id] && answers[q.id].trim() !== '') answeredQ++;
+    });
+  });
+
+  document.getElementById('sub-info').innerHTML = `Jméno: <strong>${window._studentName}</strong><br>Test ID: ${TEST_ID}<br>Zodpovězeno: ${answeredQ} / ${totalQ} otázek`;
+  document.getElementById('sub-code-area').value = code;
+
+  document.getElementById('copy-code-btn').onclick = () => {
+    const ta = document.getElementById('sub-code-area');
+    ta.select();
+    try {
+      document.execCommand('copy');
+      document.getElementById('copy-code-btn').textContent = 'Zkopírováno!';
+    } catch (e) {}
+  };
+
+  document.getElementById('download-txt-btn').onclick = () => {
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TEST_${TEST_ID}_${window._studentName}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Generate offline QR code placeholder/canvas
+  generateQR(document.getElementById('qr-container'), "https://docs.google.com/forms/d/e/1FAIpQLScLRY_E78LJIYfolj3YcFkm4UB4d--vRbrVZpGxhAYHdZMWTQ/viewform?usp=pp_url&entry.1520169381=LV+Inter+-+Slov%C3%AD%C4%8Dka+a+p%C5%99%C3%ADtomn%C3%A9+%C4%8Dasy+2&entry.1323556300=5B8+sk.1");
+}
+
+function generateQR(container, text) {
+  // Simple fallback visual representation or basic SVG matrix if needed, 
+  // since we cannot load external libraries (like qrcode.js via CDN).
+  const canvas = document.createElement('canvas');
+  canvas.width = 120;
+  canvas.height = 120;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,120,120);
+  ctx.fillStyle = '#000';
+  ctx.font = '10px monospace';
+  ctx.fillText('QR Code Placeholder', 10, 60);
+  container.appendChild(canvas);
+}
+
+// Security locks
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.key === 'F12' || (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'p' || e.key === 'c' || e.key === 'x'))) {
+    e.preventDefault();
+  }
+});
+</script>
+</body>
+</html>
